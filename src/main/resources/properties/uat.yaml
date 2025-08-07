@@ -1,0 +1,53 @@
+
+
+
+
+
+salesforce:
+  keyStore: "cert/00DRL000005wcJl.jks"
+  principal: "accelirate@clinnexus.com.uat"
+  tokenEndpoint: "https://test.salesforce.com/services/oauth2/token"
+  audienceUrl: "https://test.salesforce.com/"
+  
+  
+sysCmd:   
+  host: "np-app.clinnexus.com"
+  port: "443"
+  basePath: "/clinexus-cmd-sys-api-uat/api/customer"  
+  
+  
+mule:
+  environment: "UAT - "
+
+default:
+ timeStamp: "2024-08-12T00:00:00+03:00"
+ timeStampLeadAccount: "2024-08-26T00:00:00+03:00"
+ 
+htmlTemplates:
+  successEmail: "htmlTemplates/successEmail.template"
+  errorEmail: "htmlTemplates/errorEmail.template"
+  
+emailSmtp:
+  host: "smtp.gmail.com"
+  port: "465"
+  user: "helpdesk@clinnexus.com"
+  from: "helpdesk@clinnexus.com"
+  #to: "keerthan.bangera@accelirate.com,saujanya.verma@accelirate.com"
+  to: "Ashish.Nikam@accelirate.com"
+  starttls:
+    key: "mail.smtp.starttls.enable"
+    value: "true"  
+    
+    
+sftp:
+  dir: "HC_Claims/Inbound"
+  archive: "New/home/archive"
+  host: "s-4988316fa4374034a.server.transfer.us-east-2.amazonaws.com"
+  port: "22"
+  username: "staging"
+  key: "keys/staging"
+  cronExpression: "0 0 21 1/1 * ? *"
+  timezone: "America/Los_Angeles"
+  reconnection:
+    frequency: "2000"
+    attempts: "2"   

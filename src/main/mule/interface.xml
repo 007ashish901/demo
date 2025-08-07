@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:salesforce="http://www.mulesoft.org/schema/mule/salesforce" xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/salesforce http://www.mulesoft.org/schema/mule/salesforce/current/mule-salesforce.xsd">
+	<flow name="update_patient_to_cmd_Flow" doc:id="f031fb67-fa58-4206-8cd3-5205e40f168d" initialState="stopped">
+		<scheduler doc:name="Scheduler for update patient to cmd" doc:id="a44338d0-55f8-4f05-9d3b-233c8de0e730" >
+			<scheduling-strategy >
+				<cron expression="0 0 9 1/1 * ? *" timeZone='"America/New_York"'/>
+			</scheduling-strategy>
+		</scheduler>
+		<logger level="INFO" doc:name="scheduler started logger" doc:id="b4b57149-ab72-4cfe-8538-9d0ae8b03c51" message="patient update Scheduler process start"/>
+		<set-variable value="#[flow.name]" doc:name="flowName used in globalError-handler in processName variable" doc:id="e97b1954-7237-478e-a577-2f33b998a787" variableName="flowName" />
+		<flow-ref doc:name="Flow Reference-to-updatePatient-ImplementationFlow" doc:id="eaa5fb62-d827-4b0a-b1ae-e78b0e701e64" name="updatePatient-ImplementationFlow"/>
+		<logger level="INFO" doc:name="scheduler end logger" doc:id="07c7e8e6-9081-4a36-97a5-7ddbd8e6d928" message="patient update Scheduler process end"/>
+		<error-handler ref="global_error_handler" />
+	</flow>
+	<flow name="claim-Create_to_CMD_flow" doc:id="a3f4a1ff-bf78-41b6-a9a0-7f766f61f67f">
+		<scheduler doc:name="Scheduler for create claim to CMD" doc:id="28704769-94e9-444d-8bc6-bd4362d1d925" >
+			<scheduling-strategy >
+				<cron expression="0 0 2 1 * ?" timeZone='"America/New_York"'/>
+			</scheduling-strategy>
+		</scheduler>
+		<logger level="INFO" doc:name="scheduler start Logger" doc:id="cf496300-4b43-49d4-befa-1b87797a96bb" message="claim creat process  started"/>
+		<set-variable value="#[flow.name]" doc:name="flowName used in globalError-handler in processName variable" doc:id="aa853298-967b-449a-90cf-8d5364e5121c" variableName="flowName" />
+		<flow-ref doc:name="Flow Reference to claimCreate-ImplementationFlow" doc:id="f0bff853-e99f-43a9-b098-a88a5a5927f6" name="claimCreate-ImplementationFlow-QueryFlow"/>
+		<logger level="INFO" doc:name="scheduler end Logger" doc:id="3a5596a8-9c04-4f2c-b24e-c83fc88f9617" message="claim creat scheduler process end"/>
+		<error-handler ref="global_error_handler" />
+	</flow>
+	<flow name="ClaimCreate-Declined-and-Outreach" doc:id="31c2e373-4f7c-43ec-b41f-b8c3ebebe018" >
+		<scheduler doc:name="Scheduler" doc:id="3792e102-6699-4e97-8122-efa3c5cbf7e0" >
+			<scheduling-strategy >
+				<cron expression="0 0 22 1/1 * ? *" timeZone='"America/New_York"'/>
+			</scheduling-strategy>
+		</scheduler>
+		<logger level="INFO" doc:name="Decline and outreach scheduler flow started" doc:id="4ffcbbab-d88c-45c1-b61a-cf7f04edc668" message="Decline and outreach scheduler flow started"/>
+		<set-variable value="#[flow.name]" doc:name="flowName used in globalError-handler in processName variable" doc:id="5bb1a011-bf24-463e-af54-0722bede1366" variableName="flowName"/>
+		<flow-ref doc:name="Flow Reference-to-ClaimCreate_Declined_OutreachFlow" doc:id="574859b2-7081-4518-a93b-7defb6e33516" name="ClaimCreate_Declined_OutreachFlow"/>
+		<logger level="INFO" doc:name="Decline and outreach scheduler flow end" doc:id="e7e7f35b-8e77-43ce-a6f2-929bacf4d4ae" message="Decline and outreach scheduler flow end"/>
+	</flow>
+	<flow name="create_patient_to_cmd_flow" doc:id="409cbf6e-5f94-4db5-83af-9761255728b9" initialState="stopped">
+		<scheduler doc:name="Scheduler for Create patient" doc:id="fb8da2c0-0700-4a7b-9f5b-18079d852278" >
+			<scheduling-strategy >
+				<cron expression="0 0 9 1/1 * ? *" timeZone='"America/New_York"'/>
+			</scheduling-strategy>
+		</scheduler>
+		<logger level="INFO" doc:name="Scheduler started" doc:id="4d03f5fb-2f50-44eb-a96f-34e7cfe13840" message='#["patient create Scheduler process start"]'/>
+		<set-variable value="#[flow.name]" doc:name="flowName used in globalError-handler in processName variable" doc:id="c4b24fc2-6f9a-4799-bb8b-967961f35042" variableName="flowName"/>
+		<flow-ref doc:name="Flow Reference-to-createPatient-ImplementationFlow" doc:id="bbdab45f-4fa4-4f8b-8348-3af9e369920f" name="createPatient-ImplementationFlow"/>
+		<logger level="INFO" doc:name="Scheduler end" doc:id="8fd1a80a-f725-4ebb-bc65-9cc457111022" message="patient create Scheduler process end"/>
+		<error-handler ref="global_error_handler" />
+	</flow>
+</mule>

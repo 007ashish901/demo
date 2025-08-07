@@ -1,0 +1,31 @@
+<html>
+  <head>
+    <style>
+      table {
+        width: 100%;
+        border-collapse: collapse;
+      }
+      th, td {
+        border: 1px solid #dddddd;
+        padding: 8px;
+        text-align: left;
+      }
+      th {
+        background-color: #f2f2f2;
+      }
+    </style>
+  </head>
+  <body>
+    <h4>Hello,</h4>
+    <h4>You are receiving this email to inform you that some Time Tracker records could not be sent due some to missing CPT codes.</h4>
+     
+    <br>
+    <h4>Below is the list of Member CIN Ids that dont have CPTCode  :</h4>
+    <div>
+      <!-- Insert the dynamically generated HTML table -->
+      #[vars.errorEmailTemplateCPTCodeNull]
+    </div>
+    <br>
+    <h4>Thank you...</h4>
+  </body>
+</html>

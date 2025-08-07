@@ -1,0 +1,11 @@
+%dw 2.0
+
+type auto_a36cb33e_6fe4_40dd_aad7_a659bbefb192_Output_Variables_hpsjResult = Array<{ _?: java_lang_Object {"class": "java.lang.Object",
+  "typeAlias": "Object",
+  "typeId": "java.lang.Object"} }>
+type java_lang_Object = {|  |} {"class": "java.lang.Object",
+"typeAlias": "Object",
+"typeId": "java.lang.Object"}
+
+
+

@@ -1,0 +1,5 @@
+%dw 2.0
+
+type auto_2d6f2e7c_7c69_42d9_8fef_a74a9b3a0dfa_Output_Variables_lastRunTime = {|  |} {"typeId": "java.io.Serializable",
+"typeAlias": "Serializable"}
+

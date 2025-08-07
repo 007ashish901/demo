@@ -1,0 +1,849 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:sftp="http://www.mulesoft.org/schema/mule/sftp" xmlns:validation="http://www.mulesoft.org/schema/mule/validation"
+	xmlns:email="http://www.mulesoft.org/schema/mule/email"
+	xmlns:salesforce="http://www.mulesoft.org/schema/mule/salesforce" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:os="http://www.mulesoft.org/schema/mule/os" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/os http://www.mulesoft.org/schema/mule/os/current/mule-os.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/salesforce http://www.mulesoft.org/schema/mule/salesforce/current/mule-salesforce.xsd
+http://www.mulesoft.org/schema/mule/email http://www.mulesoft.org/schema/mule/email/current/mule-email.xsd
+http://www.mulesoft.org/schema/mule/validation http://www.mulesoft.org/schema/mule/validation/current/mule-validation.xsd
+http://www.mulesoft.org/schema/mule/sftp http://www.mulesoft.org/schema/mule/sftp/current/mule-sftp.xsd">
+	<flow name="claimCreate-ImplementationFlow-QueryFlow" doc:id="aec4056c-3415-420b-8702-44e0094e0164" >
+		<logger level="INFO" doc:name=" flow-started" doc:id="2dce08c4-68ef-4f5b-aa52-9fe0fcf41c76" message="claimCreate-ImplementationFlow-QueryFlow-started" />
+		<ee:transform doc:name="query for HPSJ and CCAH" doc:id="76f02bb6-9268-42a2-8fcb-253da2f9cc6d" >
+			<ee:message >
+			</ee:message>
+			<ee:variables >
+				<ee:set-variable variableName="queryCCAH" ><![CDATA[%dw 2.0
+output application/java
+---
+
+
+
+
+
+"SELECT  id, Account__r.Authorization_Number__c, AccidentDate__c, CreatedDate,Account__r.Opt_in_to_ECM_Date__c, ToDate_CMD__c, FromDate_CMD__c, CPTCode_CMD__c, POS_CMD__c,Modifier2_CMD__c,Modifier1_CMD__c,    Account__r.Id,  User__r.Type__c, Start__c, End__c,  Account__r.Member_CIN__c, Account__r.ClinNEXUS_Id__c, Account__r.RelationshipStatus__c, Account__r.Nationality_tribe_ethnicity__c, Account__r.Language_Spoken__c, Account__r.LastName, Account__r.FirstName, Account__r.PersonBirthdate, Account__r.PersonGender, Account__r.Phone, Account__r.CellPhone__c, Account__r.PersonEmail, Account__r.Residential_Address__Street__s, Account__r.Residential_Address__City__s, Account__r.Residential_Address__StateCode__s, Account__r.Residential_Address__PostalCode__s, Account__r.Primary_Payer_MCP_Identifier__c, Account__r.Payer_Contract__c, Account__r.MCP_Name__c, Account__r.MCP_Provider_Services_Phone_Number__c ,
+CreatedBy.Name,Contact_Method__c,      Time_Tracker__c.Service_Unit_Count_s__c, Account__r.Member_Status__c ,
+Account__r.PersonMailingStreet, Account__r.PersonMailingCity, Account__r.PersonMailingStateCode, Account__r.PersonMailingPostalCode,   Time_spent_number__c
+FROM   Time_Tracker__c    WHERE Account__r.Payer_Contract__c LIKE '%CCAH%' and  Lead__c= null and Processed__c = null  and Time_spent_number__c > 0 and Account__r.Member_CIN__c != null"
+
+ ]]></ee:set-variable>
+				<ee:set-variable variableName="queryHPSJ" ><![CDATA[%dw 2.0
+output application/java
+---
+
+"SELECT  id, Account__r.Authorization_Number__c, AccidentDate__c, CreatedDate,Account__r.Opt_in_to_ECM_Date__c, ToDate_CMD__c, FromDate_CMD__c, CPTCode_CMD__c, POS_CMD__c,Modifier2_CMD__c,Modifier1_CMD__c,    Account__r.Id,  User__r.Type__c, Start__c, End__c,  Account__r.Member_CIN__c, Account__r.ClinNEXUS_Id__c, Account__r.RelationshipStatus__c, Account__r.Nationality_tribe_ethnicity__c, Account__r.Language_Spoken__c, Account__r.LastName, Account__r.FirstName, Account__r.PersonBirthdate, Account__r.PersonGender, Account__r.Phone, Account__r.CellPhone__c, Account__r.PersonEmail, Account__r.Residential_Address__Street__s, Account__r.Residential_Address__City__s, Account__r.Residential_Address__StateCode__s, Account__r.Residential_Address__PostalCode__s, Account__r.Primary_Payer_MCP_Identifier__c, Account__r.Payer_Contract__c, Account__r.MCP_Name__c, Account__r.MCP_Provider_Services_Phone_Number__c ,
+CreatedBy.Name,Contact_Method__c,      Time_Tracker__c.Service_Unit_Count_s__c, Account__r.Member_Status__c ,
+Account__r.PersonMailingStreet, Account__r.PersonMailingCity, Account__r.PersonMailingStateCode, Account__r.PersonMailingPostalCode,   Time_spent_number__c
+FROM   Time_Tracker__c    WHERE  Account__r.Payer_Contract__c LIKE '%HPSJ%' and Lead__c = null and Processed__c = null and Time_spent_number__c > 0 and Account__r.Member_CIN__c != null"]]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+		<salesforce:query doc:name="QueryFor-HPSJ" doc:id="d437f499-a17c-4c3f-ba17-6742aebf671f" config-ref="Salesforce_Config" target="hpsjResult">
+			<salesforce:salesforce-query ><![CDATA[#[vars.queryHPSJ]]]></salesforce:salesforce-query>
+		</salesforce:query>
+		<salesforce:query doc:name="Query-for-CCAH" doc:id="185ef4ad-719f-46ee-b5b5-ec953b4c6709" config-ref="Salesforce_Config" target="ccahResult">
+			<salesforce:salesforce-query ><![CDATA[#[vars.queryCCAH]]]></salesforce:salesforce-query>
+		</salesforce:query>
+		<set-payload value="#[{ 'CCAH': vars.ccahResult, 'HPSJ': vars.hpsjResult , 'HPSJ_decline_outreach': vars.HPSJ_Declined_Outreach}]" doc:name="Set Payload-add 2 query output" doc:id="be2636f9-0714-43c7-ac6f-b3f971333120" />
+		<ee:transform doc:name="empty []" doc:id="f36312f6-a393-4a80-8644-11f5bb541220">
+			<ee:message />
+			<ee:variables>
+				<ee:set-variable variableName="failed_member_cin_id_null"><![CDATA[%dw 2.0
+output application/java
+---
+[]]]></ee:set-variable>
+				<ee:set-variable variableName="Failed_CCAH_HPSJ" ><![CDATA[%dw 2.0
+output application/json
+---
+[]]]></ee:set-variable>
+				<ee:set-variable variableName="failed_CPTCodeNull" ><![CDATA[%dw 2.0
+output application/java
+---
+[]]]></ee:set-variable>
+				<ee:set-variable variableName="failed_HealthCloud_MemberId__cNull" ><![CDATA[%dw 2.0
+output application/java
+---
+[]]]></ee:set-variable>
+				<ee:set-variable variableName="failed_CCAH_HPSJ_Declined" ><![CDATA[%dw 2.0
+output application/java
+---
+[]]]></ee:set-variable>
+				<ee:set-variable variableName="failed_CPTCode_Declined_Null" ><![CDATA[%dw 2.0
+output application/java
+---
+[]]]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+		<choice doc:name="Choice-check if any data retrived from both CCAH and HPSJ" doc:id="86865d7c-562d-4be5-bf48-011ce490c0a4">
+			<when expression="#[isEmpty(payload[0]) and isEmpty(payload[1]) and isEmpty(payload[2])]">
+				<flow-ref doc:name="Flow Reference" doc:id="ee6344c6-6b0a-4970-9fba-c132ba18e7fa" name="nodatafoundinsalesforce" />
+			</when>
+			<otherwise>
+				<logger level="INFO" doc:name="Logger" doc:id="70fe8d44-654f-4f09-8e3e-bbd5f12c44fd" message='"data present"' />
+				<scatter-gather doc:name="Scatter-Gather-process 2 query payload in Parallelly" doc:id="e5fcfaee-5c07-46e3-b389-898d246ad818">
+					<route >
+						<choice doc:name="Choice-check if data present for HPSJ" doc:id="4f9398d0-7ffe-46a9-a797-2860129e2558">
+							<when expression="#[!isEmpty(payload.HPSJ)]">
+								<flow-ref doc:name="Flow Reference-to-TransformLogicForHPSJ" doc:id="5fb7a98e-58e5-49de-b822-526f649f7a9d" name="TransformLogicForHPSJ" />
+							</when>
+							<otherwise>
+								<logger level="INFO" doc:name="Logger" doc:id="956e995e-ce6d-429a-b0da-94e680b1442f" message='"not retrived data for HPSJ"' />
+							</otherwise>
+						</choice>
+					</route>
+					<route >
+						<choice doc:name="Choice-check if data present for CCAH" doc:id="f7aa86a8-4348-43cb-a79b-f011e9c91a2a">
+							<when expression="#[!isEmpty(payload.CCAH)]">
+								<flow-ref doc:name="Reference-to-TransformLogicForCCAH" doc:id="7a99a7bc-9548-46eb-bff7-87d915a07cd4" name="TransformLogicForCCAH" />
+							</when>
+							<otherwise>
+								<logger level="INFO" doc:name="Logger" doc:id="ee733c7b-a075-4da5-9f51-f87739517230" message='"not retrived data for CCAH""' />
+							</otherwise>
+						</choice>
+					</route>
+		</scatter-gather>
+				<flow-ref doc:name="Flow Reference_to_check_if_email_need_to_sent" doc:id="3df2aecb-f1e1-4482-b7a5-ff4068bf2e52" name="check_if_email_need_to_sent"/>
+				 </otherwise>			 
+		</choice>
+		<logger level="INFO" doc:name="Logger" doc:id="9156c183-5581-47b8-8df2-05679bbe9a80" message="claimCreate-ImplementationFlow-QueryFlow-end"/>
+	</flow>
+	<sub-flow name="TransformLogicForHPSJ" doc:id="a36cb33e-6fe4-40dd-aad7-a659bbefb192" >
+		<logger level="INFO" doc:name="TransformLogicForHPSJ-flow--start" doc:id="71f839e1-90a8-46cc-8219-dd4906628022" message="TransformLogicForHPSJ-flow--start"/>
+		<set-payload value="#[%dw 2.0&#10;output application/json&#10;---&#10;payload.HPSJ]" doc:name="Set Payload-for-HPSJ" doc:id="76e32909-9469-44a0-bf16-dbdb6c27e3c0" />
+		<ee:transform doc:name="converting to Array of object" doc:id="e44a3318-c083-42a9-bf74-8326fa6932e4" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+flatten(((((((payload groupBy () -> ($.Account__r.Member_CIN__c default "") ++ ($.FromDate_CMD__c default "") ++ ($.ToDate_CMD__c default "") ++ ($.CPTCode_CMD__c default "") ++ ($.POS_CMD__c  default "") ++ ($.Modifier1_CMD__c default "") ++ ($.Modifier2_CMD__c default "") ++ ($.Account__r.Id)) mapObject () -> value : {
+   "Claim": {
+          Rendering: {
+    Identifier:
+      if (not ($.Account__r.Payer_Contract__c[0] contains "GVHC"))
+        "1245017821"
+      else if ($.Account__r.Payer_Contract__c[0] contains "GVHC")
+        "1154304335"
+      else
+        "",
+    LastName: "",
+    FirstName: ""
+  },
+    "Patient" : {
+        "Identifier" : $.Account__r.Member_CIN__c[0] default "",
+        "OtherIdentifier" : $.Account__r.ClinNEXUS_Id__c[0] default "",
+        "MaritalStatus" : ($.Account__r.RelationshipStatus__c default "U") match {
+                                case "Married" -> "M"
+                                case "Single" -> "S"
+                                case "Divorced" -> "D"
+                                case "Widower" -> "W"
+                                case "Domestic partnership" -> "U"
+                                else -> "U"
+                            },
+        "Race" : ($.Account__r.Nationality_tribe_ethnicity__c[0] default "") match {
+                    case "Asian" -> "A"
+                    case "Pacific Islander / Native Hawaiian" -> "A"
+                    case "White" -> "W"
+                    case "Black/African American" -> "B"
+                    case "American Indian/Alaskan Native" -> "I"
+                    else -> "O"
+                },
+        "Ethnicity": ($.Account__r.Nationality_tribe_ethnicity__c[0] default "") match {
+        case "Hispanic or Latino" -> "H"
+        
+        else -> "U"
+      },
+        "Language": ($.Account__r.Language_Spoken__c[0] default "") match {
+        case "English" -> "E"
+        case "Spanish" -> "S"
+        else -> "O"
+      },
+       Policy: {
+          Index: 0,
+          Payer:
+            if ($.Account__r.Payer_Contract__c[0] contains "CCAH") {
+              Identifier: "CCA01",
+              Name: "CENTRAL CALIFORNIA ALLIANCE FOR HEALTH",
+              Address: {
+                Line1: "PO BOX 660015",
+                City: "SCOTTS VALLEY",
+                State: "CA",
+                Zipcode: "95067-0015"
+              }
+            } else if ($.Account__r.Payer_Contract__c[0] contains "HPSJ") {
+              Identifier: "68035",
+              Name: "HEALTH PLAN OF SAN JOAQUIN",
+              Address: {
+                Line1: "P.O. BOX 211395",
+                City: "EAGAN",
+                State: "MN",
+                Zipcode: "55121"
+              }
+            } else null,
+          Insured: {
+            Relationship: 1
+          },
+          MemberID: $.Account__r.Member_CIN__c[0] default "",
+          Authorization: 
+          if($.Modifier1_CMD__c[0] == 'U2' or $.Modifier1_CMD__c[0] == 'U1')
+             $.Account__r.Authorization_Number__c[0] default ""
+          else null
+},
+      "LastName": $.Account__r.LastName[0] default "",
+      "FirstName": $.Account__r.FirstName[0] default "",
+      "BirthDate":
+        if (isEmpty($.Account__r.PersonBirthdate[0])) ""
+        else ($.Account__r.PersonBirthdate[0] as Date) as String { format: "MM/dd/yyyy"},
+      Gender: ($.Account__r.PersonGender[-0] default "") match {
+        case "Male" -> "M"
+        case "Female" -> "F"
+        else -> ""
+      },
+   Address: 
+    if (($.Account__r.Residential_Address__Street__s[0]) != null ) 
+    {
+      Line1: $.Account__r.Residential_Address__Street__s[0],
+      City: $.Account__r.Residential_Address__City__s[0] default "",
+      State: $.Account__r.Residential_Address__StateCode__s[0] default "",
+      Zipcode:$.Account__r.Residential_Address__PostalCode__s[0] default ""
+    }
+    else if (($.Account__r.Residential_Address__Street__s[0] default null) == null and ($.Account__r.PersonMailingStreet[0]) != null) 
+    {
+      Line1: $.Account__r.PersonMailingStreet[0],
+      City: $.Account__r.PersonMailingCity[0] default "",
+      State: $.Account__r.PersonMailingStateCode[0] default "",
+      Zipcode: $.Account__r.PersonMailingPostalCode[0] default ""
+    }
+    else {
+      Line1: "Homeless",
+      City: "",
+      State: "CA",
+      Zipcode: ""
+    },
+     "HomePhone" : $.Account__r.Phone[0] default "",
+    "CellPhone" : $.Account__r.CellPhone__c[0] default "",
+    "Email"    : $.Account__r.PersonEmail[0] default ""
+    },
+    "Charge" : {
+        "Index" : 0,
+        "FromDate" : (($.FromDate_CMD__c[0] as Date) as String {format: 'MM/dd/yyyy'}) default "",
+        "ToDate" : (($.ToDate_CMD__c[0] as Date) as String {format : 'MM/dd/yyyy'}) default "",
+        "CPTCode" : $.CPTCode_CMD__c[0] default "",
+        "POS"   : $.POS_CMD__c[0] default "",
+        "Modifier1" : $.Modifier1_CMD__c[0] default "",
+        "Modifier2" : $.Modifier2_CMD__c[0] default "",
+        "Units"  :ceil(($.Time_spent_number__c reduce ((item1, item2) -> (item1 + item2)))/15) default "",
+        "UnitPrice" : if($.Modifier1_CMD__c == 'U2') '625' else '264',
+        "Diagnosis" : if ($.Account__r.Member_Status__c[0] == "Declined")
+          [{ Index: 0,ICDVersion: 10, Code: "Z53.20" }]
+        else if (
+          $.Account__r.Residential_Address__Street__s[0] == "Homeless"
+          or $.Account__r.PersonMailingStreet[0] == "Homeless"
+        )
+          [
+            { Index: 0,ICDVersion: 10, Code: "Z59.00" },
+            { Index: 1,ICDVersion: 10, Code: "Z65.9" }
+          ]
+        else
+          [{ Index: 0,ICDVersion: 10, Code: "Z65.9" }],
+          AccidentDate: (($.AccidentDate__c[0] as Date) as String {format: 'MM/dd/yyyy'}) default "",
+    }
+    
+}   
+ 
+}) pluck $) orderBy $.Claim.Charge.FromDate) groupBy () -> $.Claim.Patient.Identifier ++  
+  ($.Claim.Charge.Modifier1 == "U8" default "")) mapObject () -> ($$) : $ map ((it, i) ->
+ 
+    "Claim": {
+     "Rendering": it.Claim.Rendering,
+      "Patient": it.Claim.Patient,
+      "Charge": {
+        "Index": it.Claim.Charge.Index,
+        "FromDate": it.Claim.Charge.FromDate,
+        "ToDate": it.Claim.Charge.ToDate,
+        "CPTCode": it.Claim.Charge.CPTCode,
+        "POS": it.Claim.Charge.POS,
+        "Modifier1": it.Claim.Charge.Modifier1,
+        "Modifier2": it.Claim.Charge.Modifier2,
+        "Units": it.Claim.Charge.Units,
+        "UnitPrice": null,
+//        UnitPrice: 
+//    if (it.Claim.Charge.Modifier1 == "U1" or it.Claim.Charge.Modifier1 == "U2") 
+//      if (i == 0) 
+//        round((470 / it.Claim.Charge.Units) * 10000) / 10000
+//      else 
+//        0.0
+//    else if (it.Claim.Charge.Modifier1 == "U8") 
+//      if ((it.Claim.Charge.Modifier2 default null) == "GQ") 
+//        round((72 / it.Claim.Charge.Units) * 10000) / 10000
+//      else if (isEmpty(it.Claim.Charge.Modifier2))
+//        round((100 / it.Claim.Charge.Units) * 10000) / 10000
+//      else 
+//        ""
+//    else 
+//      "",
+        "TotalPrice":
+    if (it.Claim.Charge.Modifier1 == "U1" or it.Claim.Charge.Modifier1 == "U2") 
+      if (i == 0) 
+        470
+      else 
+        0.0
+    else if (it.Claim.Charge.Modifier1 == "U8") 
+      if ((it.Claim.Charge.Modifier2 default null) == "GQ") 
+        72
+      else if (isEmpty(it.Claim.Charge.Modifier2))
+         100
+      else 
+        ""
+    else 
+      "",     
+        "Diagnosis": it.Claim.Charge.Diagnosis,
+        "AccidentDate": it.Claim.Charge.AccidentDate
+      }
+    }
+  
+ 
+)) pluck $)]]></ee:set-payload>
+			</ee:message>
+			<ee:variables >
+				<ee:set-variable variableName="Id_Time_Tracker" ><![CDATA[%dw 2.0
+output application/json
+var filtered = payload filter (item) -> item.Account__r.Member_CIN__c != null
+---
+filtered map (item) -> {
+  id: item.Id
+}
+]]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+		<foreach doc:name="For Each" doc:id="29e0e560-1afb-4e38-9131-5fefe79db26e" >
+			<choice doc:name="Choice-check member__cin_id present" doc:id="fa00312f-0858-4077-907a-73bcab44d0e3">
+					<when expression='#[payload.Claim.Patient.Identifier != ""]'>
+				<ee:transform doc:name="convert to xml" doc:id="f0592c8b-30ed-4dd1-84f3-eeefa72d3dff">
+						<ee:message>
+							<ee:set-payload><![CDATA[%dw 2.0
+output application/xml
+---
+payload]]></ee:set-payload>
+						</ee:message>
+					</ee:transform>
+					<choice doc:name="Choice_if one Charge present and if CPTcode is empty " doc:id="76b940cf-4b45-45e7-8788-3058170948f8">
+						<when expression="#[payload.Claim.Charge.CPTCode == null]">
+							<set-variable value='#[%dw 2.0&#10;output application/json&#10; &#10;---&#10;vars.failed_CPTCodeNull ++ [{&#10;    FirstName: payload.Claim.Patient.FirstName as String default "N/A",&#10;     LastName : payload.Claim.Patient.LastName,&#10;     ID : payload.Claim.Patient.Identifier as String default "N/A",&#10;      &#10;    }]&#10;    &#10;    &#10; //vars.errorMessageFields.failed]' doc:name='Set Variable-sets error for CPTcode ""' doc:id="64f5b529-f14e-4255-9ff4-3f6460b9e1d0" variableName="failed_CPTCodeNull" />
+						</when>
+						<otherwise>
+						<!-- [STUDIO:"Logger"]<logger level="INFO" doc:name="Logger" doc:id="3e57ddad-9962-4a09-804a-eb4e2262476c" message="#[payload&#93;"/> [STUDIO] -->
+							<ee:transform doc:name="creating file name" doc:id="9586a58d-85d5-468f-ba1c-7cf89ab9d0e6">
+								<ee:message>
+								</ee:message>
+								<ee:variables >
+									<ee:set-variable variableName="file_name_HPSJ_Capitation" ><![CDATA[%dw 2.0
+output application/java
+---
+"HPSJ capitation" ++ "_" ++ payload.Claim.Patient.Identifier ++ "_" ++ vars.counter]]></ee:set-variable>
+								</ee:variables>
+							</ee:transform>
+							<sftp:write doc:name="Write" doc:id="8e572a9c-7fff-427a-b6fb-997553d3506a" config-ref="SFTP_Config" path="#[p('sftp.dir') ++ &quot;/&quot; ++ vars.file_name_HPSJ_Capitation ++ &quot;.xml&quot;]"/>
+							<logger level="INFO" doc:name="Logger" doc:id="7007316e-eb38-47f5-a198-6ef791621bf7" message='#[%dw 2.0&#10;output application/json&#10;---&#10;"HPSJ capitation" ++ payload.Claim.Patient.Identifier ++ vars.counter]' />
+						
+</otherwise>
+					</choice>
+					</when>
+					<otherwise>
+						<logger level="INFO" doc:name="Logger" doc:id="e387e312-d400-4854-babe-454f4f8a3b97" />
+						<set-variable value='#[%dw 2.0&#10;output application/json&#10;  &#10;---&#10;vars.failed_member_cin_id_null ++ [{&#10;     FirstName: payload.Claim.Patient.FirstName default "N/A",&#10;     LastName : payload.Claim.Patient.LastName  default "N/A",&#10;     ID : payload.Claim.Patient.OtherIdentifier default "N/A",&#10;      &#10;    }]&#10;    &#10;    &#10; //vars.errorMessageFields.failed]' doc:name="concatenate patient id,name,failed reason" doc:id="c9e0e093-aa97-427c-ac2f-3c9a6cf68928" variableName="failed_member_cin_id_null" />
+					</otherwise>
+				</choice>
+		</foreach>
+		<ee:transform doc:name="Transform Message" doc:id="678b5602-c0ea-4468-ab49-8456c87ca2fa">
+								<ee:message>
+									<ee:set-payload><![CDATA[%dw 2.0
+output application/java
+---
+vars.Id_Time_Tracker map ((item) -> {
+  Id: item.id,
+  Processed__c: (now() as String {
+		format: "yyyy-MM-dd'T'HH:mm:ss'Z'"  
+	}) as DateTime
+})
+]]></ee:set-payload>
+								</ee:message>
+							</ee:transform>
+		<foreach doc:name="For Each" doc:id="4958775d-5cf6-46f0-9c5f-6659eaaca19a" >
+			<ee:transform doc:name="Transform Message" doc:id="eecc6df4-00e5-4e38-8a8b-676fdf614a69" >
+				<ee:message >
+					<ee:set-payload ><![CDATA[%dw 2.0
+output application/java
+---
+[payload]]]></ee:set-payload>
+				</ee:message>
+			</ee:transform>
+			<salesforce:update doc:name="Update" doc:id="c319fe9e-f14d-4a2c-8f97-373cd8e2aad8" config-ref="Salesforce_Config" type="Time_Tracker__c" />
+		</foreach>
+		<logger level="INFO" doc:name="Logger" doc:id="7f693795-eece-40b9-8599-7c2567242896" message='"updated data to processed_c to sf"'/>
+		<logger level="INFO" doc:name="Logger" doc:id="69738a70-694c-4099-ae49-e529c7549dd9" message='"TransformLogicForHPSJ-flow-end"'/>
+	</sub-flow>
+	<sub-flow name="check_if_email_need_to_sent" doc:id="14dea363-b419-46a0-800a-94d2605e02a7" >
+		<choice doc:name="Choice-if any error present in error variables" doc:id="fe66b6bd-fb28-4036-8670-5f72d1d37365">
+			<when expression="#[!isEmpty(vars.Failed_CCAH_HPSJ) or !isEmpty(vars.failed_member_cin_id_null) or !isEmpty(vars.failed_CPTCodeNull)&#10;or&#10;!isEmpty(vars.failed_CCAH_HPSJ_Declined) or !isEmpty(vars.failed_HealthCloud_MemberId__cNull) or !isEmpty(vars.failed_CPTCode_Declined_Null)]">
+				<flow-ref doc:name="Flow Reference-send_failed_claimCreateCCAH_email_to_cmd" doc:id="cc1b031f-d1a9-4767-a517-af9ff9db589c" name="send_failed_claimCreateCCAH_email_to_cmd" />
+			</when>
+			<otherwise>
+				<logger level="INFO" doc:name="Logger" doc:id="245bfba6-6e6b-472b-aba6-fdf7981a8ee7" message='"no patient failed to create claim in cmd"' />
+			</otherwise>
+		</choice>
+	</sub-flow>
+	<sub-flow name="nodatafoundinsalesforce" doc:id="43dc9fc3-710b-48e1-b9f4-c66183d3cb0a" >
+		<logger level="INFO" doc:name='"no data found from salesforce"' doc:id="62af71d7-20e5-4b71-b593-216c445a616d" message='"no data found from salesforce"'/>
+				<ee:transform doc:name="Transform Message" doc:id="6ceefe5e-7aa1-4b0e-a0e5-e68d1f2c58e3">
+					<ee:message>
+					</ee:message>
+					<ee:variables >
+						<ee:set-variable variableName="eventName" ><![CDATA[%dw 2.0
+output application/json
+---
+(vars.flowName splitBy "_")[0]//used to give create,update,etc as dynamic in email]]></ee:set-variable>
+					</ee:variables>
+				</ee:transform>
+				<parse-template doc:name="Parse errorEmailTemplate" doc:id="fa767da4-953f-47aa-83ca-70e79260a384" location="htmlTemplates/leadAccount/failedRecordsSalesforce.template" target="errorEmailTemplate" targetValue="#[payload]" />
+				<email:send doc:name="Send error mail to cmd for no data found in SF" doc:id="cb38666c-2967-4c99-9bae-36cf399cc0d2" config-ref="Email_SMTP" fromAddress="${emailSmtp.from}" subject="#[p('mule.environment') default &quot;&quot; ++ &quot;NO data found in salesforce&quot;]" toAddresses="#[Mule::p('emailSmtp.to') splitBy &quot;,&quot;]" >
+					<email:body contentType="text/html" >
+						<email:content ><![CDATA[#[vars.errorEmailTemplate]]]></email:content>
+					</email:body>
+				</email:send>
+				<logger level="INFO" doc:name="email send for no data found in salesforce" doc:id="f0fda4c1-2992-4654-915c-3ee234d53418" message="email send for no data found in salesforce"/>
+	</sub-flow>
+	<sub-flow name="send_failed_claimCreateCCAH_email_to_cmd" doc:id="2abbfe35-8256-4b6f-8dfc-cc31c0a60647" >
+		<logger level="INFO" doc:name="send_failed_claim_email_to_cmd flow started" doc:id="d2a88be9-d5dd-48ef-9465-bd9397151c84" message="send_failed_claim_raml_email_to_cmd flow started" />
+		<ee:transform doc:name="this transform converts in Array of json if error comes from 2 flows" doc:id="648338b8-9b88-4326-b643-577116af65b7">
+			<ee:message>
+			</ee:message>
+			<ee:variables>
+				<ee:set-variable variableName="Failed_both" ><![CDATA[%dw 2.0
+output application/json
+---
+if(typeOf(vars.Failed_CCAH_HPSJ[0]) as String == "Binary")
+flatten(
+  vars.Failed_CCAH_HPSJ map (item) -> 
+    read(item as String, "application/json")
+)
+else
+ vars.Failed_CCAH_HPSJ]]></ee:set-variable>
+				<ee:set-variable variableName="failed_both_MemberID" ><![CDATA[%dw 2.0
+output application/json
+---
+if(typeOf(vars.failed_member_cin_id_null[0]) as String == "Binary")
+flatten(
+  vars.failed_member_cin_id_null map (item) -> 
+    read(item as String, "application/json")
+)
+else
+ vars.failed_member_cin_id_null]]></ee:set-variable>
+				<ee:set-variable variableName="failed_both_CPTCode" ><![CDATA[%dw 2.0
+output application/json
+---
+if(typeOf(vars.failed_CPTCodeNull[0]) as String == "Binary")
+flatten(
+  vars.failed_CPTCodeNull map (item) -> 
+    read(item as String, "application/json")
+)
+else
+ vars.failed_CPTCodeNull]]></ee:set-variable>
+				<ee:set-variable variableName="failed_both_MemberID_declined" ><![CDATA[%dw 2.0
+output application/json
+---
+if(typeOf(vars.failed_HealthCloud_MemberId__cNull[0]) as String == "Binary")
+flatten(
+  vars.failed_HealthCloud_MemberId__cNull map (item) -> 
+    read(item as String, "application/json")
+)
+else
+ vars.failed_HealthCloud_MemberId__cNull]]></ee:set-variable>
+				<ee:set-variable variableName="Failed_Both_Declined" ><![CDATA[%dw 2.0
+output application/json
+---
+if(typeOf(vars.failed_CCAH_HPSJ_Declined[0]) as String == "Binary")
+flatten(
+  vars.failed_CCAH_HPSJ_Declined map (item) -> 
+    read(item as String, "application/json")
+)
+else
+ vars.failed_CCAH_HPSJ_Declined]]></ee:set-variable>
+				<ee:set-variable variableName="failed_both_CPTCode_Declined" ><![CDATA[%dw 2.0
+output application/json
+---
+if(typeOf(vars.failed_CPTCode_Declined_Null[0]) as String == "Binary")
+flatten(
+  vars.failed_CPTCode_Declined_Null map (item) -> 
+    read(item as String, "application/json")
+)
+else
+ vars.failed_CPTCode_Declined_Null]]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+		<logger level="INFO" doc:name="Logger" doc:id="7c9d3442-e644-4ef4-b93d-9e7f30e9f75a" message="#[vars.Failed_both]"/>
+		<ee:transform doc:name="email template for 3 types" doc:id="c05aa82b-5b10-45d9-8a92-235ba46b5cb6" >
+			<ee:message >
+			</ee:message>
+			<ee:variables >
+				<ee:set-variable variableName="errorEmailTemplate" ><![CDATA[//%dw 2.0
+//output text/plain
+//
+//var failedClaims = vars.Failed_both default []
+//var missingMember = (vars.failed_both_MemberID default [])  
+//var missingCpt = (vars.failed_both_CPTCode default []) 
+//
+//fun buildTable(data, columns) =
+//  if (isEmpty(data)) ""
+//  else
+//    "<table border='1' cellpadding='5' cellspacing='0' style='border-collapse:collapse; width:100%'>" ++
+//      "<tr>" ++ ((columns map (c) -> "<th>" ++ c ++ "</th>") joinBy "") ++ "</tr>" ++
+//      ((data map (row) ->
+//        "<tr>" ++
+//        ((columns map (c) -> "<td>" ++ (row[c] as String default "N/A") ++ "</td>") joinBy "") ++
+//        "</tr>"
+//      ) joinBy "") ++
+//    "</table><br/>"
+//
+//---
+// 
+//
+//(if (!isEmpty(failedClaims))
+//  "<h4> Claim Field are empty in Salesforce:</h4>" ++ buildTable(failedClaims, ["Name", "id", "Failed"])
+// else "") ++
+//
+//(if (!isEmpty(missingMember))
+//  "<h4> Member_CIN ID is missing. The IDs listed below are ClinNEXUS_Id:</h4>" ++ buildTable(missingMember, ["FirstName", "LastName", "ID"])
+// else "") ++
+//
+//(if (!isEmpty(missingCpt))
+//  "<h4> Missing CPT Code:</h4>" ++ buildTable(missingCpt, ["FirstName","LastName","ID"])
+// else "")  
+//
+// 
+%dw 2.0
+output text/plain
+
+var failedClaims = vars.Failed_both default []
+var missingMember = (vars.failed_both_MemberID default [])  
+var missingCpt = (vars.failed_both_CPTCode default []) 
+var failedClaimsDecline = vars.Failed_Both_Declined default []
+var missingMemberDecline = (vars.failed_both_MemberID_declined default [])  
+var missingCptDecline = (vars.failed_both_CPTCode_Declined default []) 
+
+fun buildTable(data, columns) =
+  if (isEmpty(data)) ""
+  else
+    "<table border='1' cellpadding='5' cellspacing='0' style='border-collapse:collapse; width:100%'>" ++
+      "<tr>" ++ ((columns map (c) -> "<th>" ++ c ++ "</th>") joinBy "") ++ "</tr>" ++
+      ((data map (row) ->
+        "<tr>" ++
+        ((columns map (c) -> "<td>" ++ (row[c] as String default "N/A") ++ "</td>") joinBy "") ++
+        "</tr>"
+      ) joinBy "") ++
+    "</table><br/>"
+
+---
+ 
+
+(if (!isEmpty(failedClaims))
+  "<h4> Claim Field are empty in Salesforce Account object:</h4>" ++ buildTable(failedClaims, ["Name", "id", "Failed"])
+ else "") ++
+
+(if (!isEmpty(missingMember))
+  "<h4> Member_CIN ID is missing. The IDs listed below are ClinNEXUS_Id:</h4>" ++ buildTable(missingMember, ["FirstName", "LastName", "ID"])
+ else "") ++
+
+(if (!isEmpty(missingCpt))
+  "<h4> Missing CPT Code claims for Account object :</h4>" ++ buildTable(missingCpt, ["FirstName","LastName","ID"])
+ else "") ++
+
+(if (!isEmpty(failedClaimsDecline))
+  "<h4> Claim Field are empty in Salesforce Lead object:</h4>" ++ buildTable(failedClaimsDecline, ["Name","id","Failed"])
+ else "")  ++
+
+(if (!isEmpty(missingMemberDecline))
+  "<h4> HealthCloudGA__InsuranceMemberId__c is missing. The IDs listed below are ClinNEXUS_Id</h4>" ++ buildTable(missingMemberDecline, ["FirstName","LastName","ID"])
+ else "")  ++
+
+(if (!isEmpty(missingCptDecline))
+  "<h4> Missing CPT Code in claims for Lead object :</h4>" ++ buildTable(missingCptDecline, ["FirstName","LastName","ID"])
+ else "")       
+
+ 
+
+
+]]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+		<logger level="INFO" doc:name="before Parse failed patient template" doc:id="7e7a17fc-e247-4a2d-8961-c79a050142c5" message="before Parse failed patient template" />
+		<parse-template doc:name="Parse errorEmailTemplate" doc:id="e8bb52b0-80cd-4914-a4dc-c38e472b7869" location="htmlTemplates/leadAccount/failedClaimCreateEmail.template" target="errorEmailTemplate" targetValue="#[payload]" />
+		<logger level="INFO" doc:name="after Parse failed patient template" doc:id="48216bfd-8467-48cd-a0d5-de9e43ff69a3" message="after Parse failed patient template" />
+		<email:send doc:name="Send error mail to cmd" doc:id="0bb843a6-a3aa-465c-bce7-f806fd724243" config-ref="Email_SMTP" fromAddress="${emailSmtp.from}" subject="#[p('mule.environment') default &quot;&quot; ++ &quot;This are ClinNEXUS_Id which failed to create patient in CMD&quot;]" toAddresses="#[Mule::p('emailSmtp.to') splitBy &quot;,&quot;]" >
+			<email:body contentType="text/html" >
+				<email:content ><![CDATA[#[vars.errorEmailTemplate]]]></email:content>
+			</email:body>
+		</email:send>
+		<logger level="INFO" doc:name="send_failed_claim_email_to_cmd flow ended" doc:id="36a107ea-794c-443f-98ab-0fcc21845ae8" message="send_failed_claim_raml_email_to_cmd flow end" />
+	</sub-flow>
+	<sub-flow name="TransformLogicForCCAH" doc:id="6c58d0f7-3f7e-4c07-bd67-bca400968b9d">
+		<set-payload value="#[%dw 2.0&#10;output application/json&#10;---&#10;payload.CCAH]" doc:name="Set Payload-for-CCAH" doc:id="5a8157c1-fb81-4186-a65d-1627a408e96e" />
+		<logger level="INFO" doc:name="Logger" doc:id="19e83f3a-31be-4571-acf7-6b7a793d643d" message='#["size of data retrived for CCAH is " ++ sizeOf(payload)]' />
+		<ee:transform doc:name="Transform Message-create claim json array of objects" doc:id="da9eaa85-d688-46d5-92a8-452156a65925">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+flatten(((((((payload groupBy () -> ($.Account__r.Member_CIN__c default "") ++ ($.FromDate_CMD__c default "") ++ ($.ToDate_CMD__c default "") ++ ($.CPTCode_CMD__c default "") ++ ($.POS_CMD__c  default "") ++ ($.Modifier1_CMD__c default "") ++ ($.Modifier2_CMD__c default "") ++ ($.Account__r.Id)) mapObject () -> value : {
+   "Claim": {
+          Rendering: {
+    Identifier:
+      if (not ($.Account__r.Payer_Contract__c[0] contains "GVHC"))
+        "1245017821"
+      else if ($.Account__r.Payer_Contract__c[0] contains "GVHC")
+        "1154304335"
+      else
+        "",
+    LastName: "",
+    FirstName: ""
+  },
+    "Patient" : {
+        "Identifier" : $.Account__r.Member_CIN__c[0] default "",
+        "OtherIdentifier" : $.Account__r.ClinNEXUS_Id__c[0] default "",
+        "MaritalStatus" : ($.Account__r.RelationshipStatus__c default "U") match {
+                                case "Married" -> "M"
+                                case "Single" -> "S"
+                                case "Divorced" -> "D"
+                                case "Widower" -> "W"
+                                case "Domestic partnership" -> "U"
+                                else -> "U"
+                            },
+        "Race" : ($.Account__r.Nationality_tribe_ethnicity__c[0] default "") match {
+                    case "Asian" -> "A"
+                    case "Pacific Islander / Native Hawaiian" -> "A"
+                    case "White" -> "W"
+                    case "Black/African American" -> "B"
+                    case "American Indian/Alaskan Native" -> "I"
+                    else -> "O"
+                },
+        "Ethnicity": ($.Account__r.Nationality_tribe_ethnicity__c[0] default "") match {
+        case "Hispanic or Latino" -> "H"
+        
+        else -> "U"
+      },
+        "Language": ($.Account__r.Language_Spoken__c[0] default "") match {
+        case "English" -> "E"
+        case "Spanish" -> "S"
+        else -> "O"
+      },
+       Policy: {
+          Index: 0,
+          Payer:
+            if ($.Account__r.Payer_Contract__c[0] contains "CCAH") {
+              Identifier: "CCA01",
+              Name: "CENTRAL CALIFORNIA ALLIANCE FOR HEALTH",
+              Address: {
+                Line1: "PO BOX 660015",
+                City: "SCOTTS VALLEY",
+                State: "CA",
+                Zipcode: "95067-0015"
+              }
+            } else if ($.Account__r.Payer_Contract__c[0] contains "HPSJ") {
+              Identifier: "68035",
+              Name: "HEALTH PLAN OF SAN JOAQUIN",
+              Address: {
+                Line1: "P.O. BOX 211395",
+                City: "EAGAN",
+                State: "MN",
+                Zipcode: "55121"
+              }
+            } else null,
+          Insured: {
+            Relationship: 1
+          },
+          MemberID: $.Account__r.Member_CIN__c[0] default "",
+          Authorization: 
+          if($.Modifier1_CMD__c[0] == 'U2' or $.Modifier1_CMD__c[0] == 'U1')
+             $.Account__r.Authorization_Number__c[0] default ""
+          else null   
+},
+      "LastName": $.Account__r.LastName[0] default "",
+      "FirstName": $.Account__r.FirstName[0] default "",
+      "BirthDate":
+        if (isEmpty($.Account__r.PersonBirthdate[0])) ""
+        else ($.Account__r.PersonBirthdate[0] as Date) as String { format: "MM/dd/yyyy"},
+      Gender: ($.Account__r.PersonGender[-0] default "") match {
+        case "Male" -> "M"
+        case "Female" -> "F"
+        else -> ""
+      },
+     Address: 
+    if (($.Account__r.Residential_Address__Street__s[0]) != null ) 
+    {
+      Line1: $.Account__r.Residential_Address__Street__s[0],
+      City: $.Account__r.Residential_Address__City__s[0] default "",
+      State: $.Account__r.Residential_Address__StateCode__s[0] default "",
+      Zipcode:$.Account__r.Residential_Address__PostalCode__s[0] default ""
+    }
+    else if (($.Account__r.Residential_Address__Street__s[0] default null) == null and ($.Account__r.PersonMailingStreet[0]) != null) 
+    {
+      Line1: $.Account__r.PersonMailingStreet[0],
+      City: $.Account__r.PersonMailingCity[0] default "",
+      State: $.Account__r.PersonMailingStateCode[0] default "",
+      Zipcode: $.Account__r.PersonMailingPostalCode[0] default ""
+    }
+    else {
+      Line1: "Homeless",
+      City: "",
+      State: "CA",
+      Zipcode: ""
+    },
+     "HomePhone" : $.Account__r.Phone[0] default "",
+    "CellPhone" : $.Account__r.CellPhone__c[0] default "",
+    "Email"    : $.Account__r.PersonEmail[0] default ""
+    },
+    "Charge" : {
+        "Index" : 0,
+        "FromDate" : (($.FromDate_CMD__c[0] as Date) as String {format: 'MM/dd/yyyy'}) default "",
+        "ToDate" : (($.ToDate_CMD__c[0] as Date) as String {format : 'MM/dd/yyyy'}) default "",
+        "CPTCode" : $.CPTCode_CMD__c[0] default "",
+        "POS"   : $.POS_CMD__c[0] default "",
+        "Modifier1" : $.Modifier1_CMD__c[0] default "",
+        "Modifier2" : $.Modifier2_CMD__c[0] default "",
+        "Units"  :ceil(($.Time_spent_number__c reduce ((item1, item2) -> (item1 + item2)))/15) default "",
+        "UnitPrice" : if($.Modifier1_CMD__c == 'U2') '625' else '264',
+        "Diagnosis" : if ($.Account__r.Member_Status__c[0] == "Declined")
+          [{ Index: 0,ICDVersion: 10, Code: "Z53.20" }]
+        else if (
+          $.Account__r.Residential_Address__Street__s[0] == "Homeless"
+          or $.Account__r.PersonMailingStreet[0] == "Homeless"
+        )
+          [
+            { Index: 0,ICDVersion: 10, Code: "Z59.00" },
+            { Index: 1,ICDVersion: 10, Code: "Z65.9" }
+          ]
+        else
+          [{ Index: 0,ICDVersion: 10, Code: "Z65.9" }],
+          AccidentDate: (($.AccidentDate__c[0] as Date) as String {format: 'MM/dd/yyyy'}) default "",
+    }
+    
+}   
+ 
+}) pluck $) orderBy $.Claim.Charge.FromDate) groupBy () -> $.Claim.Patient.Identifier ++  
+  ($.Claim.Charge.Modifier1 == "U8" default "")) mapObject () -> ($$) : $ map ((it, i) ->
+ 
+    "Claim": {
+      "Rendering": it.Claim.Rendering,
+      "Patient": it.Claim.Patient,
+      "Charge": {
+        "Index": it.Claim.Charge.Index,
+        "FromDate": it.Claim.Charge.FromDate,
+        "ToDate": it.Claim.Charge.ToDate,
+        "CPTCode": it.Claim.Charge.CPTCode,
+        "POS": it.Claim.Charge.POS,
+        "Modifier1": it.Claim.Charge.Modifier1,
+        "Modifier2": it.Claim.Charge.Modifier2,
+        "Units": it.Claim.Charge.Units,
+        "UnitPrice": null,
+//        "UnitPrice": 
+//  if (it.Claim.Charge.Modifier1 == 'U2' or it.Claim.Charge.Modifier1 == 'U1') 
+//    if (i == 0) round((625 / it.Claim.Charge.Units) * 10000) / 10000
+//    else round((0.0 / it.Claim.Charge.Units) * 10000) / 10000
+//  else if (it.Claim.Charge.Modifier1 == 'U8') round((264 / it.Claim.Charge.Units) * 10000) / 10000
+//  else "",
+        "TotalPrice": 
+  if (it.Claim.Charge.Modifier1 == 'U2' or it.Claim.Charge.Modifier1 == 'U1') 
+    if (i == 0)  625  
+    else  0.0 
+  else if (it.Claim.Charge.Modifier1 == 'U8') 264  
+  else "",
+        "Diagnosis": it.Claim.Charge.Diagnosis,
+        "AccidentDate": it.Claim.Charge.AccidentDate
+      }
+    }
+  
+ 
+)) pluck $)]]></ee:set-payload>
+			</ee:message>
+			<ee:variables >
+				<ee:set-variable variableName="id_time_Tracker_CCAH_Capitation" ><![CDATA[%dw 2.0
+output application/json
+var filtered = payload filter (item) -> item.Account__r.Member_CIN__c != null
+---
+filtered map (item) -> {
+  id: item.Id
+}
+]]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+		<foreach doc:name="For Each" doc:id="f6258ed7-2b14-4836-9fa7-03283816a0b7" >
+			<choice doc:name="Choice-check member__cin_id present" doc:id="0ee9c8da-5b9f-4d8e-88e3-d1d949d4e065">
+					<when expression='#[payload.Claim.Patient.Identifier != ""]'>
+				<ee:transform doc:name="converting to xml" doc:id="e360ef25-ce85-4ce3-8040-ecd8f388822b">
+						<ee:message>
+							<ee:set-payload><![CDATA[%dw 2.0
+output application/xml
+---
+payload]]></ee:set-payload>
+						</ee:message>
+					</ee:transform>
+					<choice doc:name="Choice_if one Charge present and if CPTcode is empty " doc:id="079cd172-52ca-4a6c-96b9-d160f16f1de9">
+						<when expression="#[payload.Claim.Charge.CPTCode == null]">
+							<set-variable value='#[%dw 2.0&#10;output application/json&#10; &#10;---&#10;vars.failed_CPTCodeNull ++ [{&#10;     FirstName: payload.Claim.Patient.FirstName as String default "N/A",&#10;     LastName : payload.Claim.Patient.LastName,&#10;     ID : payload.Claim.Patient.Identifier as String default "N/A",&#10;      &#10;    }]&#10;    &#10;    &#10; //vars.errorMessageFields.failed]' doc:name='Set Variable-sets error for CPTcode ""' doc:id="81efd9a0-be30-4f19-ab4b-7830fb2fd19e" variableName="failed_CPTCodeNull" />
+						</when>
+						<otherwise>
+						<!-- [STUDIO:"Logger"]<logger level="INFO" doc:name="Logger" doc:id="d478638e-0855-4dfe-8a85-9586bc955bf6" message="#[payload&#93;"/> [STUDIO] -->
+							<ee:transform doc:name="creating file name" doc:id="4cbaaf92-03e2-4969-b0df-00f26ddd0448">
+								<ee:message>
+								</ee:message>
+								<ee:variables >
+									<ee:set-variable variableName="file_name_CCAH_Capitation" ><![CDATA[%dw 2.0
+output application/java
+---
+"CCAH capitation" ++ "_" ++ payload.Claim.Patient.Identifier ++ "_" ++ vars.counter]]></ee:set-variable>
+								</ee:variables>
+							</ee:transform>
+							<sftp:write doc:name="Write" doc:id="0a03765f-39ee-48c9-aeee-cfe47daad19a" config-ref="SFTP_Config" path="#[p('sftp.dir') ++ &quot;/&quot; ++ vars.file_name_CCAH_Capitation ++ &quot;.xml&quot;]"/>
+							<logger level="INFO" doc:name="Logger" doc:id="59fb8170-216c-43a2-9e02-1ce5f0f8fea9" message='#[%dw 2.0&#10;output application/json&#10;---&#10;"CCAH capitation" ++ "_" ++ payload.Claim.Patient.Identifier ++ "_" ++ vars.counter]' />
+						
+
+</otherwise>
+					</choice>
+					
+</when>
+					<otherwise>
+						<logger level="INFO" doc:name="Logger" doc:id="a7a4ffb7-6545-47fc-9151-e32ceb12c1bb" />
+						<set-variable value='#[%dw 2.0&#10;output application/json&#10;  &#10;---&#10;vars.failed_member_cin_id_null ++ [{&#10;     FirstName: payload.Claim.Patient.FirstName default "N/A",&#10;     LastName : payload.Claim.Patient.LastName  default "N/A",&#10;     ID : payload.Claim.Patient.OtherIdentifier default "N/A",&#10;      &#10;    }]&#10;    &#10;    &#10; //vars.errorMessageFields.failed]' doc:name="concatenate patient id,name,failed reason" doc:id="7ec7c883-fe0f-44ff-a872-02960674da07" variableName="failed_member_cin_id_null" />
+					</otherwise>
+				</choice>
+		</foreach>
+		<ee:transform doc:name="Transform Message" doc:id="7d37d8c0-a489-46ce-afab-6e971a3ee71e">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/java
+---
+vars.id_time_Tracker_CCAH_Capitation map ((item) -> {
+  Id: item.id,
+  Processed__c: (now() as String {
+		format: "yyyy-MM-dd'T'HH:mm:ss'Z'"  
+	}) as DateTime
+})
+]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<foreach doc:name="For Each" doc:id="d68bb21c-f9c7-4b17-87f0-e1ae9c81fec8" >
+			<ee:transform doc:name="Transform Message" doc:id="2452ff85-b727-4c71-a87c-e3acd1f2e29f" >
+				<ee:message >
+					<ee:set-payload ><![CDATA[%dw 2.0
+output application/java
+---
+[payload]]]></ee:set-payload>
+				</ee:message>
+			</ee:transform>
+			<salesforce:update type="Time_Tracker__c" doc:name="Update" doc:id="59e43f90-d515-497a-affc-aa32400406be" config-ref="Salesforce_Config" />
+		</foreach>
+		<logger level="INFO" doc:name="Logger" doc:id="fde352be-6a9a-4f5a-8044-d802a51dbc85" message='"TransformLogicForCCAH-end' />
+	</sub-flow>
+
+</mule>

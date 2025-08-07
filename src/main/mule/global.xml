@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:sftp="http://www.mulesoft.org/schema/mule/sftp"
+	xmlns:email="http://www.mulesoft.org/schema/mule/email" xmlns:tls="http://www.mulesoft.org/schema/mule/tls"
+	xmlns:secure-properties="http://www.mulesoft.org/schema/mule/secure-properties"
+	xmlns:salesforce="http://www.mulesoft.org/schema/mule/salesforce" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:os="http://www.mulesoft.org/schema/mule/os" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="
+http://www.mulesoft.org/schema/mule/email http://www.mulesoft.org/schema/mule/email/current/mule-email.xsd http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/os http://www.mulesoft.org/schema/mule/os/current/mule-os.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/salesforce http://www.mulesoft.org/schema/mule/salesforce/current/mule-salesforce.xsd
+http://www.mulesoft.org/schema/mule/secure-properties http://www.mulesoft.org/schema/mule/secure-properties/current/mule-secure-properties.xsd
+http://www.mulesoft.org/schema/mule/tls http://www.mulesoft.org/schema/mule/tls/current/mule-tls.xsd
+http://www.mulesoft.org/schema/mule/sftp http://www.mulesoft.org/schema/mule/sftp/current/mule-sftp.xsd">
+	<os:object-store name="Object_store" doc:name="Object store" doc:id="47716a65-c00e-4365-b795-a395716a3d4a" maxEntries="3" entryTtlUnit="DAYS" expirationIntervalUnit="DAYS"/>
+	<email:smtp-config name="Email_SMTP" doc:name="Email SMTP" doc:id="082e0d39-e112-4193-8b6b-80043d2af344" >
+		<email:smtps-connection host="${emailSmtp.host}" port="${emailSmtp.port}" user="${emailSmtp.user}" password="${secure::emailSmtp.password}">
+			<tls:context >
+				<tls:trust-store insecure="true" />
+			</tls:context>
+		</email:smtps-connection>
+	</email:smtp-config>
+	<http:request-config name="HTTP_Request_configuration" doc:name="HTTP Request configuration" doc:id="b158f00d-9e1f-47f2-a601-851fa6e4d59c" basePath="${sysCmd.basePath}">
+		<http:request-connection protocol="HTTPS" host="${sysCmd.host}" port="${sysCmd.port}">
+			<tls:context >
+				<tls:trust-store insecure="true" />
+			</tls:context>
+		</http:request-connection>
+	</http:request-config>
+	<salesforce:sfdc-config name="Salesforce_Config" doc:name="Salesforce Config" doc:id="0090b9df-a889-4c36-b6fa-536be5d3606a" >
+		<salesforce:jwt-connection consumerKey="${secure::salesforce.consumerKey}" keyStore="${salesforce.keyStore}" storePassword="${secure::salesforce.storePassword}" audienceUrl="${salesforce.audienceUrl}" principal="${salesforce.principal}" tokenEndpoint="${salesforce.tokenEndpoint}"/>
+	</salesforce:sfdc-config>
+	<secure-properties:config name="Secure_Properties_Config" doc:name="Secure Properties Config" doc:id="82f4aeb1-7a4d-4a47-b79d-75fc2e3f2c5e" file="secureProperties/${mule.env}-secure.yaml" key="${mule.secretKey}"/>
+	<global-property doc:name="Global Property" doc:id="447fede2-0ee0-454f-a1c3-873c01b80049" name="mule.secretKey" value="password@1234567" />
+	<configuration-properties doc:name="Configuration properties" doc:id="55c77d55-f7d6-46e2-8d43-713c9968c462" file="properties/${mule.env}.yaml" />
+	<global-property doc:name="Global Property" doc:id="d558df52-036a-4673-857b-785fd8544041" name="mule.env" value="dev"/>
+	<os:object-store name="Object_store_claim_create" doc:name="Object store" doc:id="f8397def-4b80-467c-9c47-f3157f9a3bcb" maxEntries="1" entryTtlUnit="DAYS" expirationInterval="30" expirationIntervalUnit="DAYS"/>
+	<sftp:config name="SFTP_Config" doc:name="SFTP Config" doc:id="caac96c2-d89a-469a-9b8d-635fd6ffd18f" >
+		<sftp:connection host="${sftp.host}" username="${sftp.username}" port="${sftp.port}" workingDir="/" identityFile="${sftp.key}">
+			<reconnection >
+				<reconnect frequency="${sftp.reconnection.frequency}" count="${sftp.reconnection.attempts}" />
+			</reconnection>
+			<pooling-profile maxIdle="1" minEvictionMillis="60000" evictionCheckIntervalMillis="30000" />
+		
+</sftp:connection>
+	</sftp:config>
+</mule>

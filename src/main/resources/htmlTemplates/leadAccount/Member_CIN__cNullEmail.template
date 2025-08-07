@@ -1,0 +1,31 @@
+<html>
+  <head>
+    <style>
+      table {
+        width: 100%;
+        border-collapse: collapse;
+      }
+      th, td {
+        border: 1px solid #dddddd;
+        padding: 8px;
+        text-align: left;
+      }
+      th {
+        background-color: #f2f2f2;
+      }
+    </style>
+  </head>
+  <body>
+    <h4>Hello,</h4>
+    <h4>You are receiving this email to inform you that there was a problem in sending Claim Create data to CMD.</h4>
+     
+    <br>
+    <h4>Below is the list of ClinNEXUS Ids  this are not valid patient Member_CIN_Id are not present :</h4>
+    <div>
+      <!-- Insert the dynamically generated HTML table -->
+      #[vars.errorEmailTemplateMemberCinNull]
+    </div>
+    <br>
+    <h4>Thank you...</h4>
+  </body>
+</html>

@@ -1,0 +1,7 @@
+%dw 2.0
+
+type auto_43dc9fc3_710b_48e1_b9f4_c66183d3cb0a_Input_Variables_LastMonthDates = {|
+  firstDateOfCurrentMonth*: String, 
+  firstDateOfLastMonth*: String
+|}
+

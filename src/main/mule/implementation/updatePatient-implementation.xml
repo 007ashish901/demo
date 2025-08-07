@@ -1,0 +1,333 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:sftp="http://www.mulesoft.org/schema/mule/sftp"
+	xmlns:email="http://www.mulesoft.org/schema/mule/email" xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns:salesforce="http://www.mulesoft.org/schema/mule/salesforce"
+	xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:os="http://www.mulesoft.org/schema/mule/os" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="
+http://www.mulesoft.org/schema/mule/email http://www.mulesoft.org/schema/mule/email/current/mule-email.xsd http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/os http://www.mulesoft.org/schema/mule/os/current/mule-os.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/salesforce http://www.mulesoft.org/schema/mule/salesforce/current/mule-salesforce.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/sftp http://www.mulesoft.org/schema/mule/sftp/current/mule-sftp.xsd">
+	 <flow name="updatePatient-ImplementationFlow" doc:id="ccd794df-8733-4cfa-8c67-84121d4d2239" >
+		<logger level="INFO" doc:name=" flow-started" doc:id="5847f4b4-d70e-4aa1-86c3-3ab2ff2e44e2" message="patientUpdateImplementation-flow-start"/>
+		<os:retrieve doc:name="Retrieve last succesfull date and time " doc:id="b20cd6ef-1aeb-4600-a45d-3baccb5d537a" key="lastRunTimeUpdate" objectStore="Object_store">
+			<os:default-value ><![CDATA[#[%dw 2.0
+output application/java
+---
+(now() - |P1D|) as String]]]></os:default-value>
+		</os:retrieve>
+		<logger level="INFO" doc:name="retrive value" doc:id="c1a24f05-66a4-40e9-9c6e-69de17c93184" message='#[payload ++ " retrive value of lastRunTimeUpdatePatient in object store"]'/>
+		<set-variable value="#[payload]" doc:name="lastRunTime" doc:id="7ee2e512-9006-4d93-afde-9ba95ad7397b" variableName="lastRunTime"/>
+		<ee:transform doc:name="salesforceQuery" doc:id="6ae4521a-cc7e-460d-81f4-663807e49a09" >
+			<ee:message >
+			</ee:message>
+			<ee:variables >
+				<ee:set-variable variableName="quearyPayload" ><![CDATA[%dw 2.0
+output application/java
+---
+"SELECT CreatedDate,LastModifiedDate, Member_CIN__c ,  ClinNEXUS_Id__c, RelationshipStatus__c , Nationality_tribe_ethnicity__c, Language_Spoken__c, LastName, FirstName, PersonBirthdate, PersonGender, Phone, CellPhone__c, PersonEmail, Residential_Address__Street__s,Residential_Address__City__s,Residential_Address__StateCode__s,Residential_Address__PostalCode__s,Primary_Payer_MCP_Identifier__c ,Payer_Contract__c,
+MCP_Name__c ,  MCP_Provider_Services_Phone_Number__c from Account where LastModifiedDate  >  "++ vars.lastRunTime ++ " and ClinNEXUS_Id__c != null"
+ 
+
+//LastModifiedDate  >  "++ vars.lastRunTime ++ "]]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+		<salesforce:query doc:name="Query for all patient updated in last 24hr" doc:id="883b4c96-3ec3-4217-ae28-7f201362a436" config-ref="Salesforce_Config">
+			<salesforce:salesforce-query ><![CDATA[#[vars.quearyPayload]]]></salesforce:salesforce-query>
+		</salesforce:query>
+		<ee:transform doc:name="Transform Message" doc:id="b890c6ab-7de6-4bc4-85cc-df74b2463c5d">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+payload filter (record) -> record.CreatedDate != record.LastModifiedDate
+]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="Logger" doc:id="213c0542-b240-4001-944e-ee3d867f64f8" message='#["total patient which ware UPDATED retrived from SF since last 24 hr is: " ++ sizeOf(payload)]'/>
+		<choice doc:name="Choice-if no data in SF" doc:id="55c88f87-6777-43fd-8e39-ba2f8bbebe94" >
+			<when expression="#[!isEmpty(payload)]">
+				<logger level="INFO" doc:name="before for Each" doc:id="ab48bc57-f486-43d7-a84e-61e0cfe54426" message="before for Each" />
+				<set-variable value="#[[]]" doc:name="Set Variable-empty [ ]" doc:id="75df9d64-8519-4281-826c-10c495ce739a" variableName="Failed" />
+				<foreach doc:name="For Each-iterate-each patient in loop" doc:id="7a699c31-00a7-41b9-a221-2717c84827a3" collection="#[payload]">
+			<set-variable value='#[payload.ClinNEXUS_Id__c default ""]' doc:name="clinNEXUSId" doc:id="9547ccb5-2208-4c6f-b7f6-47dc71bed954" variableName="clinNEXUSId" />
+			<ee:transform doc:name="Transform single patient to XML" doc:id="e9fb4c0e-cb75-4538-924f-966932a9b5c7">
+				<ee:message>
+					<ee:set-payload><![CDATA[%dw 2.0
+output application/xml
+---
+PatientUpdate: {
+  Provider: {
+    Identifier: "1154304335",
+    LastName: "Soriano",
+    FirstName: "Elaine"
+  },
+  Patient: {
+    Identifier: payload.Member_CIN__c default "",
+    OtherIdentifier: payload.ClinNEXUS_Id__c default "",
+
+    MaritalStatus: (payload.RelationshipStatus__c default "U") match {
+      case "Married" -> "M"
+      case "Single" -> "S"
+      case "Divorced" -> "D"
+      case "Widower" -> "W"
+      case "Domestic partnership" -> "U"
+      case "Other" -> "U"
+      else -> ""
+    },
+
+    Race: (payload.Nationality_tribe_ethnicity__c default "") match {
+                    case "Asian" -> "A"
+                    case "Pacific Islander / Native Hawaiian" -> "A"
+                    case "White" -> "W"
+                    case "Black/African American" -> "B"
+                    case "American Indian/Alaskan Native" -> "I"
+                    else -> "O"
+    },
+
+    Ethnicity: (payload.Nationality_tribe_ethnicity__c default "") match {
+      case "Hispanic" -> "H"
+      case "Not Hispanic or Latino" -> "N"
+      else -> "O"
+    },
+
+    Language: (payload.Language_Spoken__c default "") match {
+      case "English" -> "E"
+      case "Spanish" -> "S"
+      else -> "O"
+    },
+   Policy: {
+	  Index: 0,
+	  Payer: 
+	    if (payload.Payer_Contract__c contains "CCAH") {
+	      Identifier: "CCA01",
+	      Name: "CENTRAL CALIFORNIA ALLIANCE FOR HEALTH",
+	      Address: {
+	        Line1: "PO BOX 660015",
+	        City: "SCOTTS VALLEY",
+	        State: "CA",
+	        Zipcode: "95067-0015"
+	      }
+	    } else if (payload.Payer_Contract__c contains "HPSJ") {
+	      Identifier: "68035",
+	      Name: "HEALTH PLAN OF SAN JOAQUIN",
+	      Address: {
+	        Line1: "P.O. BOX 211395",
+	        City: "EAGAN",
+	        State: "MN",
+	        Zipcode: "55121"
+	      }
+	    } else null,
+	  Insured: {
+	    Relationship: 1
+	  },
+	  MemberID: payload.Member_CIN__c default ""
+},
+
+    LastName: payload.LastName,
+    FirstName: payload.FirstName,
+
+    BirthDate: (payload.PersonBirthdate as Date) as String { format: "MM/dd/yyyy" } default "",
+
+    Gender: (payload.PersonGender default "") match {
+      case "Male" -> "M"
+      case "Female" -> "F"
+      else -> ""
+    },
+
+    Address: {
+      Line1: payload.Residential_Address__Street__s default "",
+      City: payload.Residential_Address__City__s default "",
+      State: payload.Residential_Address__StateCode__s default "",
+      Zipcode: payload.Residential_Address__PostalCode__s default ""
+    },
+
+     
+     
+    HomePhone: payload.Phone default "",
+    CellPhone: payload.CellPhone__c default "",
+    Email: payload.PersonEmail default ""
+  }
+   
+   
+   
+}
+]]></ee:set-payload>
+				</ee:message>
+			</ee:transform>
+			<ee:transform doc:name="it remove empty tags from payload IMP for raml validation in cmd sys api" doc:id="b788d44a-55dd-4fab-92cc-f60ad17d4d3f">
+				<ee:message>
+					<ee:set-payload><![CDATA[%dw 2.0
+output application/xml
+
+fun clean(obj) =
+  if (obj is Object) do {
+    var cleaned = 
+      (obj mapObject (v, k) -> (k): clean(v))
+      filterObject ((v, k) -> v != null and v != "" and not (v is Object and isEmpty(v)) and not (v is Array and isEmpty(v)))
+    ---
+    if (isEmpty(cleaned)) null else cleaned
+  }
+  else if (obj is Array) do {
+    var cleanedArray = obj map clean
+    ---
+    cleanedArray
+  }
+  else if (obj == null or obj == "") null
+  else obj
+
+---
+clean(payload)
+]]></ee:set-payload>
+				</ee:message>
+			</ee:transform>
+			<!-- [STUDIO:"creating file name"]<ee:transform doc:name="creating file name" doc:id="6cd0c529-f669-4faa-ae91-c38ca4a53ffb" >
+						<ee:message >
+						</ee:message>
+						<ee:variables >
+							<ee:set-variable variableName="file_name_PatientUpdate" ><![CDATA[%dw 2.0
+output application/java
+&#45;&#45;-
+"Patient_Update" ++ "_" ++ (payload.PatientUpdate.Patient.Identifier default payload.PatientUpdate.Patient.OtherIdentifier)  ++ "_" ++ vars.counter&#93;&#93;></ee:set-variable>
+						</ee:variables>
+					</ee:transform> [STUDIO] -->
+					<!-- [STUDIO:"Write"]<sftp:write doc:name="Write" doc:id="b2e141f7-40ea-4fd3-ab05-68f5091e7c23" config-ref="SFTP_Config" path="#[p('sftp.dir') ++ &quot;/&quot; ++ vars.file_name_PatientUpdate ++ &quot;.xml&quot;&#93;"/> [STUDIO] -->
+					<try doc:name="Try" doc:id="0962ce45-af0e-41ba-b57e-10bd746a7388">
+				<http:request method="PATCH" doc:name="Request to sys-api-cmd-post-patient" doc:id="07bbae5b-f8b9-4cff-8bcb-3b53a4e3fdd9" config-ref="HTTP_Request_configuration" path="/${sysCmd.CustomerId}/patient/xml">
+					<reconnect frequency="30000" count="3" />
+							<http:headers><![CDATA[#[{
+                "client_id": p("secure::sysCmd.client_id"),
+                "client_secret": p("secure::sysCmd.client_secret"),
+                "Content-Type": "application/xml"
+   }]]]></http:headers>
+				</http:request>
+				<error-handler>
+					<on-error-continue enableNotifications="true" logException="true" doc:name="On Error Continue" doc:id="a3625c22-a2b1-4014-b8bd-64c66547d8e9" type="HTTP:INTERNAL_SERVER_ERROR">
+						<choice doc:name="Choice" doc:id="7e50ba5d-9603-4a1e-a0e6-5718d41c705a" >
+									<when expression='#[error.errorMessage.payload.errorType == "APIKIT:BAD_REQUEST"]'>
+										<logger level="INFO" doc:name="Logger patient failed to update" doc:id="c0c89756-3ffd-4ecd-9a4c-3cee7430f2cb" message="patient failed to update" />
+										<set-variable value="#[error.errorMessage.Payload.errorMessage]" doc:name="Set Variable-store error response from sys cmd api" doc:id="393628a6-d3b6-4789-a5d5-8f48eafc6446" variableName="failedMessage" />
+										<set-variable value="#[%dw 2.0&#10;output application/json&#10;var rawArray = (((( vars.failedMessage replace &quot;http://amf-xml-extension/&quot; with &quot;&quot; splitBy  '{&quot;\&quot;\&quot;}') [0] splitBy &quot;'&quot; )[1] ++ &quot;:- &quot; ++ (( vars.failedMessage replace &quot;http://amf-xml-extension/&quot; with &quot;&quot; splitBy  '{&quot;\&quot;\&quot;}') [0] splitBy &quot;'&quot; ) [3]  ) replace  '&quot;' with &quot;&quot; splitBy  &quot;:&quot;)  &#10;---&#10;&#10;rawArray[2 to -1] map (item) -&gt;&#10;  trim(item replace /[,}]/ with &quot;&quot;)]" doc:name="creating array of fields from sys api error response" doc:id="9bd4576c-b5b6-4f46-b558-d63c8c20aa19" variableName="errorFields" />
+										<ee:transform doc:name="Filtering required fields" doc:id="3a21ccc4-59c9-4da0-9408-a182b2c513e2">
+									<ee:message>
+									</ee:message>
+									<ee:variables>
+										<ee:set-variable variableName="finalRequiredFields"><![CDATA[%dw 2.0
+output application/json
+var requiredFieldsArray = [
+  "LastName",
+  "FirstName",   
+  "BirthDate",
+  "Gender",
+   "Payer",
+  "Line1",
+  "Zipcode",
+  "State",
+  "City"
+]
+
+---
+requiredFieldsArray filter (item) ->  vars.errorFields contains item
+]]></ee:set-variable>
+									</ee:variables>
+								</ee:transform>
+										<set-variable value='#[%dw 2.0&#10;output application/json&#10; &#10;---&#10;vars.Failed ++ [{&#10;      Name: payload.PatientUpdate.Patient.FirstName as String default "N/A",&#10;      id: payload.PatientUpdate.Patient.OtherIdentifier as String default "N/A",&#10;      Failed:  "Due to this fields patient failed:: " ++ (vars.finalRequiredFields joinBy ", " default "N/A")&#10;    }]&#10;    &#10;    &#10; //vars.errorMessageFields.failed]' doc:name="concatenate patient id,name,failed reason" doc:id="d5c25465-696d-4fb3-9ec7-5a0937fc04d9" variableName="Failed" />
+									</when>
+									<otherwise >
+										<logger level="INFO" doc:name="Logger" doc:id="c398ae8d-f3ff-463e-af18-3c5ff6831abb" message='"error another than APIKIT:BAD_REQUEST"'/>
+										<raise-error doc:name="Raise error" doc:id="1e38efa5-e5ec-4a04-95af-384c7ee06c9b" type="UNKNOWN:ERROR_TYPE" description="this error occured because of there was problem in CMD System API" />
+									</otherwise>
+								</choice>
+					</on-error-continue>
+				</error-handler>
+			</try>
+			<set-variable value="#[payload]" doc:name="Response from sys api cmd" doc:id="26fe8b64-8466-4dce-83e6-cc99a7df6dba" variableName="responsePayload" />
+			<logger level="INFO" doc:name="Logger for payload" doc:id="d99a3705-a2bc-45c9-8877-fd93388a65ce" message="#[payload]" />
+		</foreach>
+				<logger level="INFO" doc:name="after for Each" doc:id="33b06a7f-e652-4af0-9007-d8c15aecf3d8" message="after for Each" />
+				<set-variable value="#[(now()) as String]" doc:name="timestamp for last run" doc:id="eb631d59-f493-4715-96ad-e2acf0e9b559" variableName="timestamp" />
+				<os:store doc:name="Store-lastrun-time-date" doc:id="29acc6e1-1212-4f16-b8dd-b0394c3dec3d" objectStore="Object_store" key="lastRunTimeUpdate">
+			<os:value><![CDATA[#[vars.timestamp]]]></os:value>
+		</os:store>
+				<logger level="INFO" doc:name="store value" doc:id="dd42bfe0-f669-4d67-956f-085b06a90841" message=' stored value of lastRunTimeUpdate in objectStore"' />
+				<choice doc:name="check if any patient failed to update in CMD" doc:id="aca7b5cf-c46b-42c7-9d98-523f939575b6">
+			<when expression="#[!isEmpty(vars.Failed)]">
+				<flow-ref doc:name="calling flow:-send_failed_updatePatient_email_to_cmd" doc:id="a80edbc1-eb68-4898-84e0-e4719fbab587" name="send_failed_updatePatient_email_to_cmd" />
+			</when>
+			<otherwise>
+				<logger level="INFO" doc:name="all patients were created successfully in CMD." doc:id="2584c2af-abf5-44dc-ad7f-ead1c235a841" message="all patients were created successfully in CMD." />
+			</otherwise>
+		</choice>
+			</when>
+			<otherwise >
+				<logger level="INFO" doc:name='Logger-"no data found from salesforce"' doc:id="8a5306a1-c74d-43be-951c-bc3da73ef45c" message='"no data found from salesforce"'/>
+				<ee:transform doc:name="Transform Message" doc:id="44029cbd-1e77-4a31-98cf-b485950ddd1c" >
+					<ee:message />
+					<ee:variables >
+						<ee:set-variable variableName="eventName" ><![CDATA[%dw 2.0
+output application/json
+---
+(vars.flowName splitBy "_")[0]//used to give create,update,etc as dynamic in email]]></ee:set-variable>
+					</ee:variables>
+				</ee:transform>
+				<parse-template doc:name="Parse errorEmailTemplate" doc:id="67909967-6cb8-488f-bf13-c7d73aa707e5" location="htmlTemplates/leadAccount/failedRecordsSalesforce.template" target="errorEmailTemplate" targetValue="#[payload]" />
+				<email:send doc:name="Send error mail to cmd for no data found in SF" doc:id="8db80939-99df-43e6-bfb2-c39ed3b3e9ff" config-ref="Email_SMTP" fromAddress="${emailSmtp.from}" subject="#[p('mule.environment') default &quot;&quot; ++ &quot;NO data found in salesforce&quot;]" toAddresses="#[Mule::p('emailSmtp.to') splitBy &quot;,&quot;]" >
+					<email:body contentType="text/html" >
+						<email:content ><![CDATA[#[vars.errorEmailTemplate]]]></email:content>
+					</email:body>
+				</email:send>
+				<logger level="INFO" doc:name="email send for no data found in salesforce" doc:id="4855266b-e070-4b08-bc1e-2966043ce8bb" message="email send for no data found in salesforce" />
+			
+</otherwise>
+		</choice>
+		<logger level="INFO" doc:name="flow-end" doc:id="5f91e382-1966-458c-91f7-547ac43c6cd3" message="patientCreateImplementation-flow-end"/>		 
+	</flow>
+	<sub-flow name="send_failed_updatePatient_email_to_cmd" doc:id="092bd368-cfef-4614-b411-5fc53b94c856" >
+		<logger level="INFO" doc:name="send_failed_patient_email_to_cmd flow started" doc:id="8bf58f06-9c31-4910-98d8-f9e482b3976f" message="send_failed_patient_email_to_cmd flow started"/>
+		<ee:transform doc:name="This transforms id,name,failed reason to html format" doc:id="470453da-bdca-40ff-b038-5848c4be6b06" >
+			<ee:message >
+			</ee:message>
+			<ee:variables >
+				<ee:set-variable variableName="errorEmailTemplate" ><![CDATA[%dw 2.0
+
+var data = vars.Failed map () -> {
+
+    "Name" : $.Name,
+    "Id" : $.id,
+    "Failed reason" : $.Failed default "N/A"
+}
+var keys = keysOf(data[0]) // Headers
+output application/xml writeDeclaration=false
+---
+table @(class:"bordered"): {
+    //Headers Mapping
+    tr : {
+        (keys map ((item, index) -> {
+            th :item
+        }))
+    },
+    //Values Mapping
+    (data map ((item, index) -> {
+        tr : {
+            (item mapObject {
+                td : $
+            })
+        }
+    }))
+}]]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+		<logger level="INFO" doc:name="before Parse failed patient template" doc:id="6a70b9c0-b26f-47ab-bc91-6eeff310b54f" message="before Parse failed patient template"/>
+		<parse-template doc:name="Parse errorEmailTemplate" doc:id="b31c4695-59a8-4a69-968d-5d093162085a" location="htmlTemplates/leadAccount/failedUpdateEmail.template" target="errorEmailTemplate" targetValue="#[payload]" />
+		<logger level="INFO" doc:name="after Parse failed patient template" doc:id="4c49b6d2-2738-4d82-8f39-a9aa6327b6e1" message="after Parse failed patient template"/>
+		<email:send doc:name="Send error mail to cmd" doc:id="25eab084-3d35-4b26-9387-a022de9b1d69" config-ref="Email_SMTP" fromAddress="${emailSmtp.from}" subject="#[p('mule.environment') default &quot;&quot; ++ &quot;This are ClinNEXUS_Id which failed to update patient in CMD&quot;]" toAddresses="#[Mule::p('emailSmtp.to') splitBy &quot;,&quot;]" >
+			<email:body contentType="text/html" >
+				<email:content ><![CDATA[#[vars.errorEmailTemplate]]]></email:content>
+			</email:body>
+		</email:send>
+		<logger level="INFO" doc:name="send_failed_patient_email_to_cmd flow ended" doc:id="75dfd8ff-28a1-493e-ae96-de53238687f5" message="send_failed_patient_email_to_cmd flow ended"/>
+	</sub-flow>
+
+</mule>

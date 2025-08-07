@@ -1,0 +1,6 @@
+<h4>Hello,</h4>
+  <h4>This email is regarding the #[vars.eventName] patient to CMD process.</h4> 
+  <p>No data was retrieved from Salesforce.</p>
+  <br/>
+  <h4>Thank you...</h4>
+</div>

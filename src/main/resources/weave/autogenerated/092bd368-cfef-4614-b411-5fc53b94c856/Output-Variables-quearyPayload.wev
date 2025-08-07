@@ -1,0 +1,4 @@
+%dw 2.0
+
+type auto_092bd368_cfef_4614_b411_5fc53b94c856_Output_Variables_quearyPayload = Any
+

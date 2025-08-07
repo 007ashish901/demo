@@ -1,0 +1,5 @@
+<h4>Hello,</h4>
+<h4>You are receiving this email to inform you that the there was problem in #[vars.processName] patient to CMD.</h4>
+<p>#[vars.emailErrorMessage]</p>
+<br>
+<h4>Thank you...</h4>

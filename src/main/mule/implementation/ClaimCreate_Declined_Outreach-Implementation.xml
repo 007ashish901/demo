@@ -1,0 +1,627 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:email="http://www.mulesoft.org/schema/mule/email"
+	xmlns:sftp="http://www.mulesoft.org/schema/mule/sftp"
+	xmlns:salesforce="http://www.mulesoft.org/schema/mule/salesforce" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns:os="http://www.mulesoft.org/schema/mule/os"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="
+http://www.mulesoft.org/schema/mule/email http://www.mulesoft.org/schema/mule/email/current/mule-email.xsd 
+http://www.mulesoft.org/schema/mule/sftp http://www.mulesoft.org/schema/mule/sftp/current/mule-sftp.xsd http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/os http://www.mulesoft.org/schema/mule/os/current/mule-os.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/salesforce http://www.mulesoft.org/schema/mule/salesforce/current/mule-salesforce.xsd">
+	<flow name="ClaimCreate_Declined_OutreachFlow" doc:id="708243dd-3ea0-4a21-b5c3-5012e7503fae" >
+		<logger level="INFO" doc:name="Logger" doc:id="7d4eab67-509c-4513-bf1f-1751aa01e73f" message="outreach_Decline implementation flow started "/>
+		<os:retrieve doc:name="Retrieve last succesfull date and time for Decline and outreach" doc:id="fc4bb4ee-7a93-4832-9566-368ac1e96bae" key="lastRunTimeDeclineOutreach" objectStore="Object_store" target="lastRun">
+			<os:default-value ><![CDATA[#[%dw 2.0
+output application/java
+---
+(now() - |P1D|) as String]]]></os:default-value>
+		</os:retrieve>
+		<logger level="INFO" doc:name="Logger" doc:id="b5ce7ba9-7edf-4352-a5a2-335863d99340" message='#["this is lastRun Date which was retrived " ++ vars.lastRun]'/>
+		<ee:transform doc:name="query" doc:id="5f5d9f0c-ed63-4bd7-825f-191e913a1e0e" >
+			<ee:message >
+			</ee:message>
+			<ee:variables >
+				<ee:set-variable variableName="queryDeclined_Outreach" ><![CDATA[%dw 2.0
+output application/java
+---
+"SELECT Id, Lead__r.Id, AccidentDate__c, CreatedDate, Lead__r.Outreach_Date__c, Lead__r.Declined_Date__c,  Lead__r.Status, Lead__r.FirstName , Lead__r.LastName, Lead__r.HealthCloudGA__BirthDate__c , Lead__r.HealthCloudGA__Gender__c , Lead__r.Phone, Lead__r.Other_Phone__c, Lead__r.Email, Lead__r.Street, Lead__r.City, Lead__r.StateCode, Lead__r.PostalCode , Lead__r.LeadSource, Start__c, End__c, CreatedBy.Name, User__r.Type__c, Contact_Method__c,  Lead__r.HealthCloudGA__InsuranceMemberId__c, Modifier1_CMD__c, Modifier2_CMD__c,FromDate_CMD__c,ToDate_CMD__c,CPTCode_CMD__c,POS_CMD__c,
+Service_Unit_Count_s__c , Lead__r.ClinNEXUS_Id__c, Lead__r.Nationality_tribe_ethnicity__c, Lead__r.Language_Spoken__c ,Time_spent_number__c  , Type__c  FROM Time_Tracker__c 
+where CreatedDate  >  "++ vars.lastRun ++ "  and Lead__c  != null and Processed__c = null and Time_spent_number__c > 0   and (Lead__r.LeadSource LIKE '%CCAH%'  or (Lead__r.LeadSource LIKE '%HPSJ%' and Lead__r.Status != 'Declined' ))  order by Lead__r.HealthCloudGA__InsuranceMemberId__c"
+
+ 
+
+ 
+
+
+
+
+
+//"SELECT Id, Lead__r.Id, AccidentDate__c, CreatedDate, Lead__r.Outreach_Date__c, Lead__r.Declined_Date__c,  Lead__r.Status, Lead__r.FirstName , Lead__r.LastName, Lead__r.HealthCloudGA__BirthDate__c , Lead__r.HealthCloudGA__Gender__c , Lead__r.Phone, Lead__r.Other_Phone__c, Lead__r.Email, Lead__r.Street, Lead__r.City, Lead__r.StateCode, Lead__r.PostalCode , Lead__r.LeadSource, Start__c, End__c, CreatedBy.Name, User__r.Type__c, Contact_Method__c,  Lead__r.HealthCloudGA__InsuranceMemberId__c, Modifier1_CMD__c, Modifier2_CMD__c,FromDate_CMD__c,ToDate_CMD__c,CPTCode_CMD__c,POS_CMD__c,
+//Service_Unit_Count_s__c , Lead__r.ClinNEXUS_Id__c, Lead__r.Nationality_tribe_ethnicity__c, Lead__r.Language_Spoken__c ,Time_spent_number__c  , Type__c  FROM Time_Tracker__c 
+//where CreatedDate  >= 2025-08-01T00:00:00.000+0000 and CreatedDate  < 2025-08-04T00:00:00.000+0000 and Lead__c  != null and Processed__c = null and Time_spent_number__c > 0   and (Lead__r.LeadSource LIKE '%CCAH%'  or (Lead__r.LeadSource LIKE '%HPSJ%' and Lead__r.Status != 'Declined' ))  order by Lead__r.HealthCloudGA__InsuranceMemberId__c"
+]]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+		<salesforce:query doc:name="Query" doc:id="c794a3e5-fe8a-4511-9f7f-d28bc158ea63" config-ref="Salesforce_Config">
+			<salesforce:salesforce-query ><![CDATA[#[vars.queryDeclined_Outreach]]]></salesforce:salesforce-query>
+		</salesforce:query>
+		<logger level="INFO" doc:name="Logger" doc:id="6c5fb891-9083-4fed-bb3b-ad0c8207a9af" message="#[%dw 2.0&#10;output application/json&#10;---&#10;sizeOf(payload)]"/>
+		<ee:transform doc:name="empty []" doc:id="437d07bc-6bd1-4fe4-a757-66fef2bebc4f" >
+			<ee:message >
+			</ee:message>
+			<ee:variables >
+				<ee:set-variable variableName="failed_HealthCloud_MemberId__cNull" ><![CDATA[%dw 2.0
+output application/java
+---
+[]]]></ee:set-variable>
+				<ee:set-variable variableName="failed_CPTCode_Declined_Null" ><![CDATA[%dw 2.0
+output application/java
+---
+[]]]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+		<choice doc:name="Choice" doc:id="8cf87aa5-8c9e-49c5-bcc3-525dc1b17ad0" >
+			<when expression="#[!isEmpty(payload)]">
+				<flow-ref doc:name="Flow Reference" doc:id="616fb68d-2c4a-4c49-824f-6ba65b3b3767" name="ClaimCreate_Declined_Outreach-Implementation-Sub_Flow"/>
+				<choice doc:name="Choice" doc:id="41496f8b-ff06-4ef1-8cef-7ae17377ed50" >
+					<when expression="#[!isEmpty(vars.failed_HealthCloud_MemberId__cNull) or !isEmpty(vars.failed_CPTCode_Declined_Null)]">
+						<flow-ref doc:name="Flow Reference" doc:id="234a07da-c672-4ff4-8915-9fb233d73eaa" name="send_failed_claimCreateDeclinedOutreach_email_to_cmd"/>
+					</when>
+					<otherwise >
+						<logger level="INFO" doc:name="Logger" doc:id="b045b53c-5c28-43b0-a25d-4f6a3c50cc51" message="No-claim outreach and declined failed to create in CMD "/>
+					</otherwise>
+				</choice>
+			</when>
+			<otherwise >
+				<logger level="INFO" doc:name="Logger-No data retrived for Declined and outreach" doc:id="84ed7646-6d25-4d65-bf49-a099f8f10f59" message="No data retrived for Declined and outreach"/>
+				<flow-ref doc:name="Flow Reference" doc:id="00f24d3b-ff86-4226-b433-3f6edebb5a9b" name="send_email_no_data_Retrived_Decline_Outreach-flow"/>
+			</otherwise>
+		</choice>
+		<logger level="INFO" doc:name="Logger" doc:id="2251568c-cdaf-4d7b-b472-1a9202fa23cc" message="before storing date in objectStore"/>
+		<os:store doc:name="Store" doc:id="90a8007a-326e-4e97-a811-8da841dfd776" key="lastRunTimeDeclineOutreach" objectStore="Object_store">
+			<os:value><![CDATA[#[(now()) as String]]]></os:value>
+		</os:store>
+		<logger level="INFO" doc:name="Logger" doc:id="4d14f58d-b489-4d33-8a54-f35707a6ac85" message="stored value in object store for next run"/>
+	</flow>
+		<sub-flow name="ClaimCreate_Declined_Outreach-Implementation-Sub_Flow" doc:id="91f8f026-dc37-45ad-a989-f66ddf6014e4" >
+		<logger level="INFO" doc:name="ClaimCreate_Declined_Outreach-Implementation-Sub_Flow-start" doc:id="405d618e-ae47-4355-b4c1-6c4318a2f768" message="ClaimCreate_Declined_Outreach-Implementation-Sub_Flow-start"/>
+		<ee:transform doc:name="Transform Message" doc:id="63c13747-e6f3-4cfa-b1dd-56ce4fcb0405" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+(payload groupBy (item) -> (item.Lead__r.HealthCloudGA__InsuranceMemberId__c default "") ++ (item.Lead__r.Id) ) 
+  mapObject ((value, key) -> {
+    member: value
+  })
+ 
+]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<ee:transform doc:name="Transform Message" doc:id="a2a88c24-f241-404b-883b-e013bebc9a20" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload pluck (value, key) -> { (key): value }
+]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<ee:transform doc:name="Transform Message" doc:id="b84d13d5-6a87-40b7-8b58-e85eb2ef1432" >
+			<ee:message >
+			</ee:message>
+			<ee:variables >
+				<ee:set-variable variableName="id_Time_Tracker_Decline_Outreach" ><![CDATA[%dw 2.0
+output application/json
+---
+flatten(
+  payload map ((group) -> 
+    group.member filter ((item) -> 
+      item.Lead__r.HealthCloudGA__InsuranceMemberId__c != null
+    ) map ((item) -> {
+      id: item.Id
+    })
+  )
+)
+]]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+		<foreach doc:name="For Each" doc:id="1f0bd0cd-5610-4840-93ba-becaf400ea52" >
+			<choice doc:name="Choice-check member__cin_id present" doc:id="965c7031-0df0-4786-8ff7-230d68aae58f">
+					<when expression="#[payload.member.Lead__r.HealthCloudGA__InsuranceMemberId__c[0] != null]">
+				<ee:transform doc:name="short max-Time_spent_number__c" doc:id="bfb8da0b-f2c3-4ac9-8e66-91391621f9fb">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+payload.member   maxBy (item) -> item.Time_spent_number__c as Number ]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+					<ee:transform doc:name="set claim logic and convert to XML" doc:id="0fa69d5d-495d-430c-9161-7c4bda209e26">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/xml
+ 
+---
+Claim: {
+  Rendering: {
+    Identifier: 
+      if (not (payload.Lead__r.LeadSource contains "GVHC")) 
+        "1245017821"
+      else if (payload.Lead__r.LeadSource contains "GVHC") 
+        "1154304335"
+      else 
+        "",
+    LastName: "",
+    FirstName: ""
+  },
+  Patient: {
+    Identifier: payload.Lead__r.HealthCloudGA__InsuranceMemberId__c default "",
+    OtherIdentifier: payload.Lead__r.ClinNEXUS_Id__c default "",
+
+    MaritalStatus: (payload.Lead__r.RelationshipStatus__c default "U") match {
+                                case "Married" -> "M"
+                                case "Single" -> "S"
+                                case "Divorced" -> "D"
+                                case "Widower" -> "W"
+                                case "Domestic partnership" -> "U"
+                                else -> "U"
+    },
+
+    Race: (payload.Lead__r.Nationality_tribe_ethnicity__c default "") match {
+                    case "Asian" -> "A"
+                    case "Pacific Islander / Native Hawaiian" -> "A"
+                    case "White" -> "W"
+                    case "Black/African American" -> "B"
+                    case "American Indian/Alaskan Native" -> "I"
+                    else -> "O"
+    },
+
+    Ethnicity: (payload.Lead__r.Nationality_tribe_ethnicity__c default "") match {
+      case "Hispanic" -> "H"
+      case "Not Hispanic or Latino" -> "N"
+      else -> "O"
+    },
+
+    Language: (payload.Lead__r.Language_Spoken__c default "") match {
+      case "English" -> "E"
+      case "Spanish" -> "S"
+      else -> "O"
+    },
+    
+    Policy: {
+		  Index: 0,
+		  Payer: 
+		    if (payload.Lead__r.LeadSource contains "CCAH") {
+		      Identifier: "CCA01",
+		      Name: "CENTRAL CALIFORNIA ALLIANCE FOR HEALTH",
+		      Address: {
+		        Line1: "PO BOX 660015",
+		        City: "SCOTTS VALLEY",
+		        State: "CA",
+		        Zipcode: "95067-0015"
+		      }
+		    } else if (payload.Lead__r.LeadSource contains "HPSJ") {
+		      Identifier: "68035",
+		      Name: "HEALTH PLAN OF SAN JOAQUIN",
+		      Address: {
+		        Line1: "P.O. BOX 211395",
+		        City: "EAGAN",
+		        State: "MN",
+		        Zipcode: "55121"
+		      }
+		    } else null,
+		  Insured: {
+		    Relationship: 1
+		  },
+		  MemberID: payload.Lead__r.HealthCloudGA__InsuranceMemberId__c default "",
+		  Authorization: null
+}, 
+
+    LastName: payload.Lead__r.LastName,
+    FirstName: payload.Lead__r.FirstName,
+
+    BirthDate: 
+      if (isEmpty(payload.Lead__r.HealthCloudGA__BirthDate__c)) "" 
+      else (payload.Lead__r.HealthCloudGA__BirthDate__c as Date) as String { format: "MM/dd/yyyy" },
+
+    Gender: (payload.Lead__r.HealthCloudGA__Gender__c default "") match {
+      case "Male" -> "M"
+      case "Female" -> "F"
+      else -> ""
+    },
+
+    Address: 
+  if ((payload.Lead__r.Street) != null) 
+    {
+      Line1: payload.Lead__r.Street,
+      City: payload.Lead__r.City default "",
+      State: payload.Lead__r.StateCode default "",
+      Zipcode: payload.Lead__r.PostalCode default ""
+    }
+  else 
+    {
+      Line1: "Homeless",
+      City: "",
+      State: "CA",
+      Zipcode: ""
+    },
+    HomePhone: payload.Lead__r.Phone default "",
+    CellPhone: payload.Lead__r.Other_Phone__c default "",
+    Email: payload.Lead__r.Email default ""
+  },
+  
+  Charge: {
+
+    Index:0,
+    FromDate:(payload.FromDate_CMD__c  as Date) as String { format: "MM/dd/yyyy" } default "",
+    ToDate:(payload.ToDate_CMD__c  as Date) as String { format: "MM/dd/yyyy" } default "",  
+    CPTCode: (payload.CPTCode_CMD__c)  default "",
+         
+    POS: payload.POS_CMD__c  default "",
+    Modifier1: payload.Modifier1_CMD__c default "",
+    Modifier2: payload.Modifier2_CMD__c default ""  ,   
+          
+   
+
+    Units: payload.Service_Unit_Count_s__c default "",
+    UnitPrice: null,           
+//    UnitPrice: 
+//  if ((payload.Lead__r.LeadSource default "") contains "CCAH") 
+//    if ((payload.Lead__r.Status default "") == "Declined") 
+//      round((44 / (payload.Service_Unit_Count_s__c as Number)) * 10000) / 10000
+//    else if ((payload.Lead__r.Status default "") != "Declined") 
+//      round((264 / (payload.Service_Unit_Count_s__c as Number)) * 10000) / 10000
+//    else 
+//      ""
+//  else if ((payload.Lead__r.LeadSource default "") contains "HPSJ") 
+//     
+//    if((payload.Lead__r.Status default "") != "Declined") 
+//        if(payload.Modifier2_CMD__c == "GQ")
+//        round((72 / (payload.Service_Unit_Count_s__c as Number)) * 10000) / 10000
+//        else if(payload.Modifier2_CMD__c != "GQ") 
+//        round((100 / (payload.Service_Unit_Count_s__c as Number)) * 10000) / 10000
+//        else ""
+//    else "" 
+//  else 
+//    "", 
+    "TotalPrice": 
+  if ((payload.Lead__r.LeadSource default "") contains "CCAH") 
+    if ((payload.Lead__r.Status default "") == "Declined") 
+       44  
+    else if ((payload.Lead__r.Status default "") != "Declined") 
+       264  
+    else 
+      ""
+  else if ((payload.Lead__r.LeadSource default "") contains "HPSJ") 
+     
+    if((payload.Lead__r.Status default "") != "Declined") 
+        if(payload.Modifier2_CMD__c == "GQ")
+          72 
+        else if(payload.Modifier2_CMD__c != "GQ") 
+          100  
+        else ""
+    else "" 
+  else 
+    "", 
+	Diagnosis:if (payload.Lead__r.Status == "Declined") 
+		    [{ Index: 0, ICDVersion: 10, Code: "Z53.20" }]
+		  else if (payload.Lead__r.Street == "Homeless") 
+		    [
+		      { Index: 0,ICDVersion: 10, Code: "Z59.00" },
+		      { Index: 1,ICDVersion: 10, Code: "Z65.9" }
+		    ]
+		  else if (payload.Lead__r.Street != "Homeless")
+		    [{ Index: 0,ICDVersion: 10, Code: "Z65.9" }]
+		  else [],
+    AccidentDate: 
+        ((payload.AccidentDate__c as Date) as String {format: 'MM/dd/yyyy'}) default "",
+  }
+}
+]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+				<!-- [STUDIO:"stores 1 in Array if CPTcode is empty &quot;&quot;, else [](empty array)"]<ee:transform doc:name='stores 1 in Array if CPTcode is empty "", else [&#93;(empty array)' doc:id="05f01814-1600-4f4e-8bee-92d569dbb150">
+						<ee:message>
+						</ee:message>
+						<ee:variables>
+						<ee:set-variable variableName="CPTCodeIndexArrayHPSJ"><![CDATA[%dw 2.0
+output application/json
+&#45;&#45;-
+if(payload.Claim.Charge.CPTCode == null)
+ [1&#93;
+ else
+ [&#93;
+
+&#93;&#93;></ee:set-variable>
+						
+</ee:variables>
+					</ee:transform> [STUDIO] -->
+					<choice doc:name="Choice_if one Charge present and if CPTcode is empty " doc:id="2fb41fd8-9523-4a4a-bce4-090b693249fa">
+						<when expression='#[payload.Claim.Patient.Identifier == null]'>
+							<set-variable value='#[%dw 2.0&#10;output application/json&#10; &#10;---&#10;vars.failed_CPTCode_Declined_Null ++ [{&#10;     FirstName: payload.Claim.Patient.FirstName as String default "N/A",&#10;     LastName : payload.Claim.Patient.LastName,&#10;     ID : payload.Claim.Patient.Identifier as String default "N/A",&#10;      &#10;    }]&#10;    &#10;    &#10; //vars.errorMessageFields.failed]' doc:name='Set Variable-sets error for CPTcode ""' doc:id="ff8afebd-fb12-406f-9966-f1945900dd31" variableName="failed_CPTCode_Declined_Null" />
+						</when>
+						<otherwise>
+						<!-- [STUDIO:"removes empty tag from payload IMP for raml validation"]<ee:transform doc:name="removes empty tag from payload IMP for raml validation" doc:id="6fccf65a-3b3e-49c7-9520-ff163a98f7e2">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/xml
+
+fun clean(obj) =
+  if (obj is Object) do {
+    var cleaned = 
+      (obj mapObject (v, k) -> (k): clean(v))
+      filterObject ((v, k) -> v != null and v != "" and not (v is Object and isEmpty(v)) and not (v is Array and isEmpty(v)))
+    &#45;&#45;-
+    if (isEmpty(cleaned)) null else cleaned
+  }
+  else if (obj is Array) do {
+    var cleanedArray = obj map clean
+    &#45;&#45;-
+    cleanedArray
+  }
+  else if (obj == null or obj == "") null
+  else obj
+
+&#45;&#45;-
+clean(payload)
+&#93;&#93;></ee:set-payload>
+			</ee:message>
+			<ee:variables>
+				<ee:set-variable variableName="Failed"><![CDATA[%dw 2.0
+output application/java
+&#45;&#45;-
+[&#93;&#93;&#93;></ee:set-variable>
+			</ee:variables>
+		</ee:transform> [STUDIO] -->
+						<!-- [STUDIO:"Logger"]<logger level="INFO" doc:name="Logger" doc:id="9100e0ab-74eb-4c68-81a0-f4b69317a938" message="#[payload&#93;" /> [STUDIO] -->
+							<ee:transform doc:name="creating file name" doc:id="f820bcda-bea3-451a-911a-6d937d9a684a">
+								<ee:message>
+								</ee:message>
+								<ee:variables >
+									<ee:set-variable variableName="file_name_Decline_Outreach" ><![CDATA[%dw 2.0
+output application/java
+---
+"Decline and outreach" ++ "_" ++ payload.Claim.Patient.Identifier ++ "_" ++ vars.counter]]></ee:set-variable>
+								</ee:variables>
+							</ee:transform>
+							<sftp:write doc:name="Write" doc:id="5c1c8a66-4fdd-4d5f-a119-a9588f601415" config-ref="SFTP_Config" path="#[p('sftp.dir') ++ &quot;/&quot; ++ vars.file_name_Decline_Outreach ++ &quot;.xml&quot;]"/>
+						<logger level="INFO" doc:name="Logger" doc:id="2386c3bb-ec7c-4da5-9d10-8097754a7348" message='#[%dw 2.0&#10;output application/json&#10;---&#10;"Decline and outreach" ++ "_" ++ payload.Claim.Patient.Identifier ++ "_" ++ vars.counter]' />
+						
+
+
+</otherwise>
+					</choice>
+					
+</when>
+					<otherwise>
+						<logger level="INFO" doc:name="Logger" doc:id="52d1d3bd-f4c5-489a-b354-6b210f00643d" />
+						<set-variable value='#[%dw 2.0&#10;output application/json&#10;  &#10;---&#10;vars.failed_HealthCloud_MemberId__cNull ++ [{&#10;     FirstName: payload.member[0].Lead__r.FirstName default "N/A",&#10;     LastName : payload.member[0].Lead__r.LastName  default "N/A",&#10;     ID : payload.member[0].Lead__r.ClinNEXUS_Id__c default "N/A",&#10;      &#10;    }]&#10;    &#10;    &#10; //vars.errorMessageFields.failed]' doc:name="concatenate patient id,name,failed reason" doc:id="60ae1cef-0571-47f2-b826-3c15a2588269" variableName="failed_HealthCloud_MemberId__cNull" />
+					</otherwise>
+				</choice>
+		</foreach>
+		<ee:transform doc:name="Transform Message" doc:id="9b737db3-4594-48cc-b908-132ba613ec7d">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/java
+---
+vars.id_Time_Tracker_Decline_Outreach map ((item) -> {
+  Id: item.id,
+  Processed__c: (now() as String {
+		format: "yyyy-MM-dd'T'HH:mm:ss'Z'"  
+	}) as DateTime
+})
+]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="Logger" doc:id="6f97e310-a554-43e5-ba69-c1ba0673b1d5" message="before update process_c field in sf for Each"/>
+		<foreach doc:name="For Each" doc:id="72b1b081-8b5f-4349-a63b-11651a484733" >
+			<ee:transform doc:name="Transform Message" doc:id="9867e522-6c73-46a6-b464-eb5a4f6efb75" >
+				<ee:message >
+					<ee:set-payload ><![CDATA[%dw 2.0
+output application/java
+---
+[payload]]]></ee:set-payload>
+				</ee:message>
+			</ee:transform>
+			<salesforce:update type="Time_Tracker__c" doc:name="Update" doc:id="27394ecd-294e-4f66-9b47-55b22a4c01cd" config-ref="Salesforce_Config" />
+		</foreach>
+		<logger level="INFO" doc:name="Logger" doc:id="5b796cdc-702e-41bb-9e0c-5e35487f902a" message="updated processed__c  in salesforce for decline and outreach end"/>
+		<logger level="INFO" doc:name="ClaimCreate_Declined_Outreach-Implementation-Sub_Flow-end" doc:id="de24c497-47a0-4ec1-9ed6-d288fcccdb96" message="ClaimCreate_Declined_Outreach-Implementation-Sub_Flow-end"/>
+	</sub-flow>
+	<sub-flow name="send_email_no_data_Retrived_Decline_Outreach-flow" doc:id="41bb186e-1bab-4a24-9968-fc9fd7cf0f4a" >
+		<logger level="INFO" doc:name='"no data found from salesforce"' doc:id="762b1362-8864-4f59-91a5-a0ecdd229eef" message='"no data found from salesforce"'/>
+				<ee:transform doc:name="Transform Message" doc:id="860445f5-35fc-4833-a325-138b5d8e88ef">
+					<ee:message>
+					</ee:message>
+					<ee:variables >
+						<ee:set-variable variableName="eventName" ><![CDATA[%dw 2.0
+output application/json
+---
+(vars.flowName splitBy "_")[0]//used to give create,update,etc as dynamic in email]]></ee:set-variable>
+					</ee:variables>
+				</ee:transform>
+				<parse-template doc:name="Parse errorEmailTemplate" doc:id="34f87e16-369b-4490-89fd-b215f9a167b8" location="htmlTemplates/leadAccount/failedRecordsSalesforce.template" target="errorEmailTemplate" targetValue="#[payload]" />
+				<email:send doc:name="Send error mail to cmd for no data found in SF" doc:id="a1bb266f-77a4-4898-b7d7-dd78b70a7b58" config-ref="Email_SMTP" fromAddress="${emailSmtp.from}" subject="#[p('mule.environment') default &quot;&quot; ++ &quot;NO data found in salesforce&quot;]" toAddresses="#[Mule::p('emailSmtp.to') splitBy &quot;,&quot;]" >
+					<email:body contentType="text/html" >
+						<email:content ><![CDATA[#[vars.errorEmailTemplate]]]></email:content>
+					</email:body>
+				</email:send>
+				<logger level="INFO" doc:name="email send for no data found in salesforce" doc:id="97f90407-8318-452f-8544-e0a6c8c4e745" message="email send for no data found in salesforce"/>
+	</sub-flow>
+	<sub-flow name="send_failed_claimCreateDeclinedOutreach_email_to_cmd" doc:id="c1deaf04-0df2-47ef-8b40-b26c93d76df2" >
+		<logger level="INFO" doc:name="send_failed_claim_email_to_cmd flow started" doc:id="756ba94a-e2e1-453e-93d1-c1eb853ef3c6" message="send_failed_claim_raml_email_to_cmd flow started" />
+		<ee:transform doc:name="this transform converts in Array of json if error comes from 2 flows" doc:id="3cc6c09a-8737-42fb-961b-066ce4d33855">
+			<ee:message>
+			</ee:message>
+			<ee:variables>
+				<ee:set-variable variableName="Failed_both" ><![CDATA[%dw 2.0
+output application/json
+---
+if(typeOf(vars.Failed_CCAH_HPSJ[0]) as String == "Binary")
+flatten(
+  vars.Failed_CCAH_HPSJ map (item) -> 
+    read(item as String, "application/json")
+)
+else
+ vars.Failed_CCAH_HPSJ]]></ee:set-variable>
+				<ee:set-variable variableName="failed_both_MemberID" ><![CDATA[%dw 2.0
+output application/json
+---
+if(typeOf(vars.failed_member_cin_id_null[0]) as String == "Binary")
+flatten(
+  vars.failed_member_cin_id_null map (item) -> 
+    read(item as String, "application/json")
+)
+else
+ vars.failed_member_cin_id_null]]></ee:set-variable>
+				<ee:set-variable variableName="failed_both_CPTCode" ><![CDATA[%dw 2.0
+output application/json
+---
+if(typeOf(vars.failed_CPTCodeNull[0]) as String == "Binary")
+flatten(
+  vars.failed_CPTCodeNull map (item) -> 
+    read(item as String, "application/json")
+)
+else
+ vars.failed_CPTCodeNull]]></ee:set-variable>
+				<ee:set-variable variableName="failed_both_MemberID_declined" ><![CDATA[%dw 2.0
+output application/json
+---
+if(typeOf(vars.failed_HealthCloud_MemberId__cNull[0]) as String == "Binary")
+flatten(
+  vars.failed_HealthCloud_MemberId__cNull map (item) -> 
+    read(item as String, "application/json")
+)
+else
+ vars.failed_HealthCloud_MemberId__cNull]]></ee:set-variable>
+				<ee:set-variable variableName="Failed_Both_Declined" ><![CDATA[%dw 2.0
+output application/json
+---
+if(typeOf(vars.failed_CCAH_HPSJ_Declined[0]) as String == "Binary")
+flatten(
+  vars.failed_CCAH_HPSJ_Declined map (item) -> 
+    read(item as String, "application/json")
+)
+else
+ vars.failed_CCAH_HPSJ_Declined]]></ee:set-variable>
+				<ee:set-variable variableName="failed_both_CPTCode_Declined" ><![CDATA[%dw 2.0
+output application/json
+---
+if(typeOf(vars.failed_CPTCode_Declined_Null[0]) as String == "Binary")
+flatten(
+  vars.failed_CPTCode_Declined_Null map (item) -> 
+    read(item as String, "application/json")
+)
+else
+ vars.failed_CPTCode_Declined_Null]]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+		<logger level="INFO" doc:name="Logger" doc:id="1e725598-f6a1-4b1d-bc15-f2b2bd7d1a70" message="#[vars.Failed_both]"/>
+		<ee:transform doc:name="email template for 3 types" doc:id="798d75af-a1ff-4fd4-bf07-328617ab2e16" >
+			<ee:message >
+			</ee:message>
+			<ee:variables >
+				<ee:set-variable variableName="errorEmailTemplate" ><![CDATA[//%dw 2.0
+//output text/plain
+//
+//var failedClaims = vars.Failed_both default []
+//var missingMember = (vars.failed_both_MemberID default [])  
+//var missingCpt = (vars.failed_both_CPTCode default []) 
+//
+//fun buildTable(data, columns) =
+//  if (isEmpty(data)) ""
+//  else
+//    "<table border='1' cellpadding='5' cellspacing='0' style='border-collapse:collapse; width:100%'>" ++
+//      "<tr>" ++ ((columns map (c) -> "<th>" ++ c ++ "</th>") joinBy "") ++ "</tr>" ++
+//      ((data map (row) ->
+//        "<tr>" ++
+//        ((columns map (c) -> "<td>" ++ (row[c] as String default "N/A") ++ "</td>") joinBy "") ++
+//        "</tr>"
+//      ) joinBy "") ++
+//    "</table><br/>"
+//
+//---
+// 
+//
+//(if (!isEmpty(failedClaims))
+//  "<h4> Claim Field are empty in Salesforce:</h4>" ++ buildTable(failedClaims, ["Name", "id", "Failed"])
+// else "") ++
+//
+//(if (!isEmpty(missingMember))
+//  "<h4> Member_CIN ID is missing. The IDs listed below are ClinNEXUS_Id:</h4>" ++ buildTable(missingMember, ["FirstName", "LastName", "ID"])
+// else "") ++
+//
+//(if (!isEmpty(missingCpt))
+//  "<h4> Missing CPT Code:</h4>" ++ buildTable(missingCpt, ["FirstName","LastName","ID"])
+// else "")  
+//
+// 
+%dw 2.0
+output text/plain
+
+var failedClaims = vars.Failed_both default []
+var missingMember = (vars.failed_both_MemberID default [])  
+var missingCpt = (vars.failed_both_CPTCode default []) 
+var failedClaimsDecline = vars.Failed_Both_Declined default []
+var missingMemberDecline = (vars.failed_both_MemberID_declined default [])  
+var missingCptDecline = (vars.failed_both_CPTCode_Declined default []) 
+
+fun buildTable(data, columns) =
+  if (isEmpty(data)) ""
+  else
+    "<table border='1' cellpadding='5' cellspacing='0' style='border-collapse:collapse; width:100%'>" ++
+      "<tr>" ++ ((columns map (c) -> "<th>" ++ c ++ "</th>") joinBy "") ++ "</tr>" ++
+      ((data map (row) ->
+        "<tr>" ++
+        ((columns map (c) -> "<td>" ++ (row[c] as String default "N/A") ++ "</td>") joinBy "") ++
+        "</tr>"
+      ) joinBy "") ++
+    "</table><br/>"
+
+---
+ 
+
+(if (!isEmpty(failedClaims))
+  "<h4> Claim Field are empty in Salesforce Account object:</h4>" ++ buildTable(failedClaims, ["Name", "id", "Failed"])
+ else "") ++
+
+(if (!isEmpty(missingMember))
+  "<h4> Member_CIN ID is missing. The IDs listed below are ClinNEXUS_Id:</h4>" ++ buildTable(missingMember, ["FirstName", "LastName", "ID"])
+ else "") ++
+
+(if (!isEmpty(missingCpt))
+  "<h4> Missing CPT Code claims for Account object :</h4>" ++ buildTable(missingCpt, ["FirstName","LastName","ID"])
+ else "") ++
+
+(if (!isEmpty(failedClaimsDecline))
+  "<h4> Claim Field are empty in Salesforce Lead object:</h4>" ++ buildTable(failedClaimsDecline, ["Name","id","Failed"])
+ else "")  ++
+
+(if (!isEmpty(missingMemberDecline))
+  "<h4> HealthCloudGA__InsuranceMemberId__c is missing. The IDs listed below are ClinNEXUS_Id</h4>" ++ buildTable(missingMemberDecline, ["FirstName","LastName","ID"])
+ else "")  ++
+
+(if (!isEmpty(missingCptDecline))
+  "<h4> Missing CPT Code in claims for Lead object :</h4>" ++ buildTable(missingCptDecline, ["FirstName","LastName","ID"])
+ else "")       
+
+ 
+
+
+]]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+		<logger level="INFO" doc:name="before Parse failed patient template" doc:id="4b7a65ab-1e93-4c8f-acff-50b02b1e7ec4" message="before Parse failed patient template" />
+		<parse-template doc:name="Parse errorEmailTemplate" doc:id="9b961912-e235-4307-86d8-e57396ff5e78" location="htmlTemplates/leadAccount/failedClaimCreateEmail.template" target="errorEmailTemplate" targetValue="#[payload]" />
+		<logger level="INFO" doc:name="after Parse failed patient template" doc:id="0f09b6ff-3035-4af7-9c81-6b20b7e7a8c1" message="after Parse failed patient template" />
+		<email:send doc:name="Send error mail to cmd" doc:id="129493d6-907a-4745-b993-cc252028a21f" config-ref="Email_SMTP" fromAddress="${emailSmtp.from}" subject="#[p('mule.environment') default &quot;&quot; ++ &quot;This are ClinNEXUS_Id which failed to create patient in CMD&quot;]" toAddresses="#[Mule::p('emailSmtp.to') splitBy &quot;,&quot;]" >
+			<email:body contentType="text/html" >
+				<email:content ><![CDATA[#[vars.errorEmailTemplate]]]></email:content>
+			</email:body>
+		</email:send>
+		<logger level="INFO" doc:name="send_failed_claim_email_to_cmd flow ended" doc:id="608f9957-934b-442e-9f04-12e2b67e6cd2" message="send_failed_claim_raml_email_to_cmd flow end" />
+	</sub-flow>
+</mule>

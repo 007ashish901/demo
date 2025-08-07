@@ -1,0 +1,11 @@
+salesforce:
+  consumerKey: "![DQg2Xjr4AivlosAqcyQmPp/ep8mfRscjAYkOyuxjg7HA2jOZIc9v26+Jsj/cBdjU4Xb/PiqQj/pqM6BQnZKt6lkrCZgTVQCFYN1XGv/w7p5qEFtxs3oNJu6thmGZAYu0]"
+  storePassword: "![Z0MFYkmJrdOXRkEA4GxmcA==]"
+  
+  
+sysCmd:
+   client_id: "![p4gBel7qHZgoGK8e1kjsaika2mz+yWDRUBRYgxA6gLgUE3U+yXTe8Q3w6CBNh+s5]"
+   client_secret: "![RJSFF09VU67H6WK8OhGQo+6nBcicNbhpHIRcazvb1ZPaUNUQfNB/rkxwO6hoIBih]"   
+   
+emailSmtp:  
+  password: "ppum pszz lbsm qncc" 

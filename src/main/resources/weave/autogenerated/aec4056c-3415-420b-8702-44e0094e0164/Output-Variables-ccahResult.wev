@@ -1,0 +1,11 @@
+%dw 2.0
+
+type auto_aec4056c_3415_420b_8702_44e0094e0164_Output_Variables_ccahResult = Array<{ _?: java_lang_Object {"class": "java.lang.Object",
+  "typeAlias": "Object",
+  "typeId": "java.lang.Object"} }>
+type java_lang_Object = {|  |} {"class": "java.lang.Object",
+"typeAlias": "Object",
+"typeId": "java.lang.Object"}
+
+
+

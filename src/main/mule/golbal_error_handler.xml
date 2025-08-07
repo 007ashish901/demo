@@ -1,0 +1,224 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:email="http://www.mulesoft.org/schema/mule/email"
+	xmlns:cloudhub="http://www.mulesoft.org/schema/mule/cloudhub"
+	xmlns:sftp="http://www.mulesoft.org/schema/mule/sftp"
+	xmlns:db="http://www.mulesoft.org/schema/mule/db"
+	xmlns:salesforce="http://www.mulesoft.org/schema/mule/salesforce"
+	xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns:tls="http://www.mulesoft.org/schema/mule/tls"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/tls http://www.mulesoft.org/schema/mule/tls/current/mule-tls.xsd
+http://www.mulesoft.org/schema/mule/salesforce http://www.mulesoft.org/schema/mule/salesforce/current/mule-salesforce.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
+http://www.mulesoft.org/schema/mule/sftp http://www.mulesoft.org/schema/mule/sftp/current/mule-sftp.xsd
+http://www.mulesoft.org/schema/mule/cloudhub http://www.mulesoft.org/schema/mule/cloudhub/current/mule-cloudhub.xsd
+http://www.mulesoft.org/schema/mule/email http://www.mulesoft.org/schema/mule/email/current/mule-email.xsd">
+	<error-handler name="global_error_handler">
+		<on-error-propagate enableNotifications="true" logException="true" doc:name="On Error Propagate" doc:id="66224af4-6750-44e1-8b94-7ee3ed7d89e3" type="ANY">
+			<ee:transform doc:name="Error message template" doc:id="5f999d6e-523a-4e5c-90a4-e84ca1f61146">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+        errorType: error.errorType.identifier,
+        errorMessage: error.cause.message,
+        failingComponent : error.failingComponent,
+        timestamp: now()
+}]]></ee:set-payload>
+			</ee:message>
+				<ee:variables>
+					<ee:set-variable variableName="emailErrorMessage"><![CDATA[%dw 2.0
+output application/java
+---
+(
+   // Message for HTTP
+  if (error.errorType.namespace == 'HTTP' and error.errorType.identifier == 'NOT_FOUND')
+    "Sync failed because the specified resource could not be found (404) on "
+  else if (error.errorType.namespace == 'HTTP' and error.errorType.identifier == 'BAD_REQUEST')
+    "Sync failed due to an invalid request or incorrect resource name (400) on "
+    else if (error.errorType.namespace == 'DATA' and error.errorType.identifier == 'EMPTY-IN-SALESFORCE')
+    "No Records found in Salesforce Account Object on "
+ 
+  else if (error.errorType.namespace == 'HTTP' and error.errorType.identifier == 'TIMEOUT')
+    "Sync failed due to a timeout while connecting to the resource on "
+    
+  else if (error.errorType.namespace == 'HTTP' and error.errorType.identifier == 'CONNECTIVITY')
+    "Sync failed due to a CONNECTIVITY, while connecting to resource on "
+    
+  else if (error.errorType.namespace == 'HTTP' and error.errorType.identifier == 'UNAUTHORIZED')
+    "Sync failed due to a UNAUTHORIZED (401),while connecting to resource on " 
+    
+    
+  else if ((error.childErrors[0].errorType.identifier == "Connectivity") or (error.childErrors[1].errorType.identifier == "Connectivity"))
+    "Sync failed due to a CONNECTIVITY  resource on "
+    
+  else if ((error.childErrors[0].errorType.identifier == "NOT_FOUND") or (error.childErrors[1].errorType.identifier == "NOT_FOUND"))
+     "Sync failed because the specified resource could not be found (404) on "
+     
+ else if ((error.childErrors[0].errorType.identifier == "TIMEOUT") or (error.childErrors[1].errorType.identifier == "TIMEOUT"))
+    "Sync failed due to a timeout while connecting to the resource on "
+    
+    
+    
+    
+    
+    
+ // Message for SFTP   
+   
+ else if (error.errorType.namespace == 'SFTP' and error.errorType.identifier == 'INVALID_CREDENTIALS')
+    "Sync to Salesforce to SFTP failed due to invalid Credentials (e.g., incorrect password for SFTP) on "   
+    
+ else if (error.errorType.namespace == 'SFTP' and error.errorType.identifier == 'ILLEGAL_PATH')
+    "Sync to Salesforce to SFTP failed due to ILLEGAL_PATH on "   
+    
+ else if (error.errorType.namespace == 'SFTP' and error.errorType.identifier == 'FILE_ALREADY_EXISTS')
+    "Sync to Salesforce to SFTP failed due to FILE_ALREADY_EXISTS on "    
+    
+    
+ else if (error.errorType.namespace == 'SFTP' and error.errorType.identifier == 'ACCESS_DENIED')
+    "Sync to Salesforce to SFTP failed due to ACCESS_DENIED on "            
+    
+ else if (error.errorType.namespace == 'SFTP' and error.errorType.identifier == 'ILLEGAL_CONTENT')
+    "Sync to Salesforce to SFTP failed due to ILLEGAL_CONTENT on " 
+    
+ else if (error.errorType.namespace == 'SFTP' and error.errorType.identifier == 'CONNECTIVITY')
+    "Sync to Salesforce to SFTP failed due to CONNECTIVITY on "
+    
+ else if (error.errorType.namespace == 'SFTP' and error.errorType.identifier == 'CONNECTION_TIMEOUT')
+    "Sync to Salesforce to SFTP failed due to CONNECTION_TIMEOUT on "    
+    
+ else if (error.errorType.namespace == 'SFTP' and error.errorType.identifier == 'CANNOT_REACH')
+    "Sync to Salesforce to SFTP failed due to CANNOT_REACH on "             
+    
+    
+// SFTP error from CLAIMS 
+
+ 
+ else if (
+    error.childErrors[0].errorType.identifier == "CONNECTION_TIMEOUT" or 
+    error.childErrors[1].errorType.identifier == "CONNECTION_TIMEOUT" or 
+    error.childErrors[2].errorType.identifier == "CONNECTION_TIMEOUT"
+)
+    "Sync failed due to a timeout while connecting to the resource on "
+
+else if (
+    error.childErrors[0].errorType.identifier == "INVALID_CREDENTIALS" or 
+    error.childErrors[1].errorType.identifier == "INVALID_CREDENTIALS" or 
+    error.childErrors[2].errorType.identifier == "INVALID_CREDENTIALS"
+)
+    "Sync to Salesforce to SFTP failed due to invalid Credentials (e.g., incorrect password for SFTP) on "
+
+else if (
+    error.childErrors[0].errorType.identifier == "ILLEGAL_PATH" or 
+    error.childErrors[1].errorType.identifier == "ILLEGAL_PATH" or 
+    error.childErrors[2].errorType.identifier == "ILLEGAL_PATH"
+)
+    "Sync to Salesforce to SFTP failed due to ILLEGAL_PATH on "
+
+else if (
+    error.childErrors[0].errorType.identifier == "FILE_ALREADY_EXISTS" or 
+    error.childErrors[1].errorType.identifier == "FILE_ALREADY_EXISTS" or 
+    error.childErrors[2].errorType.identifier == "FILE_ALREADY_EXISTS"
+)
+    "Sync to Salesforce to SFTP failed due to FILE_ALREADY_EXISTS on "
+
+else if (
+    error.childErrors[0].errorType.identifier == "ACCESS_DENIED" or 
+    error.childErrors[1].errorType.identifier == "ACCESS_DENIED" or 
+    error.childErrors[2].errorType.identifier == "ACCESS_DENIED"
+)
+    "Sync to Salesforce to SFTP failed due to ACCESS_DENIED on "
+
+else if (
+    error.childErrors[0].errorType.identifier == "ILLEGAL_CONTENT" or 
+    error.childErrors[1].errorType.identifier == "ILLEGAL_CONTENT" or 
+    error.childErrors[2].errorType.identifier == "ILLEGAL_CONTENT"
+)
+    "Sync to Salesforce to SFTP failed due to ILLEGAL_CONTENT on "
+
+else if (
+    error.childErrors[0].errorType.identifier == "CONNECTIVITY" or 
+    error.childErrors[1].errorType.identifier == "CONNECTIVITY" or 
+    error.childErrors[2].errorType.identifier == "CONNECTIVITY"
+)
+    "Sync to Salesforce to SFTP failed due to CONNECTIVITY on "
+
+else if (
+    error.childErrors[0].errorType.identifier == "CONNECTION_TIMEOUT" or 
+    error.childErrors[1].errorType.identifier == "CONNECTION_TIMEOUT" or 
+    error.childErrors[2].errorType.identifier == "CONNECTION_TIMEOUT"
+)
+    "Sync to Salesforce to SFTP failed due to CONNECTION_TIMEOUT on "
+
+else if (
+    error.childErrors[0].errorType.identifier == "CANNOT_REACH" or 
+    error.childErrors[1].errorType.identifier == "CANNOT_REACH" or 
+    error.childErrors[2].errorType.identifier == "CANNOT_REACH"
+)
+    "Sync to Salesforce to SFTP failed due to CANNOT_REACH on "
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ // Message for SALESFORCE  
+  else if (error.errorType.namespace == 'SALESFORCE' and error.errorType.identifier == 'INVALID_INPUT')
+    "Sync to Salesforce failed due to invalid input (e.g., incorrect field or format) on "
+  else if (error.errorType.namespace == 'SALESFORCE' and error.errorType.identifier == 'NOT_FOUND')
+    "Sync to Salesforce failed because the record was not found (404) on "
+  else if (error.errorType.namespace == 'SALESFORCE' and error.errorType.identifier == 'CONNECTIVITY')
+    "Sync to Salesforce failed due to a connectivity issue on "
+  else if (error.errorType.namespace == 'SALESFORCE' and error.errorType.identifier == 'RETRY_EXHAUSTED')
+    "Sync to Salesforce failed after multiple retry attempts on "
+  else if (error.errorType.namespace == 'SALESFORCE' and error.errorType.identifier == 'TIMEOUT')
+    "Sync to Salesforce failed due to a timeout while waiting for a response on "
+
+  else
+    "Data sync from Salesforce to CMD failed due to an unexpected system error on "
+)
+++ now() as String {format: "yyyy-MM-dd"}
+]]></ee:set-variable>
+					<ee:set-variable variableName="processName" ><![CDATA[%dw 2.0
+output application/json
+---
+(vars.flowName splitBy "_")[0]//used to give create,update,etc as dynamic in email]]></ee:set-variable>
+				
+</ee:variables>
+		</ee:transform>
+			<logger level="INFO" doc:name="Error occured due the below reason::" doc:id="ae694fb9-fa2c-406a-bccd-b889e229bbb3" message="#[payload]" />
+			<parse-template doc:name="Parse errorEmailTemplate" doc:id="b18ffef7-b5b2-4ea0-a4b8-b731792d1ec0" location="htmlTemplates/leadAccount/errorEmail.template" target="errorEmailTemplate" targetValue="#[payload]" />
+			<logger level="INFO" doc:name="Logger - Sending error mail" doc:id="4e3ee62c-5298-40f8-af7c-62770739eef2" message='#["Sending error mail with content::\n"]' />
+			<email:send doc:name="Send error mail" doc:id="3c04d865-8c1b-4f4e-8b7c-246ebd15ef8a" config-ref="Email_SMTP" fromAddress="${emailSmtp.from}" subject="#[p('mule.environment') default &quot;&quot; ++ &quot;This error while transferring data to CMD&quot;]" toAddresses="#[Mule::p('emailSmtp.to') splitBy &quot;,&quot;]">
+				<email:body contentType="text/html">
+					
+					<email:content><![CDATA[#[vars.errorEmailTemplate]]]></email:content>
+				</email:body>
+			</email:send>
+			<logger level="INFO" doc:name="Logger - Successfully sent error mail" doc:id="75a584a8-b277-472d-a22e-d78da55cfede" message='#["Successfully sent error mail"]' />
+			<logger level="INFO" doc:name="Exit Generic Error Handler" doc:id="c6c03e73-3456-493f-bcc5-467e1ea15063" message="#[payload]" />
+		</on-error-propagate>
+	
+
+</error-handler>
+</mule>

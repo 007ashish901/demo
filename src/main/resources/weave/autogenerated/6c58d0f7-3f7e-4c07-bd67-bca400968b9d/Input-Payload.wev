@@ -1,0 +1,19 @@
+%dw 2.0
+
+type auto_6c58d0f7_3f7e_4c07_bd67_bca400968b9d_Input_Payload = {|
+  CCAH: Array<{ _?: java_lang_Object {"class": "java.lang.Object",
+    "typeAlias": "Object",
+    "typeId": "java.lang.Object"} }>, 
+  HPSJ: Array<anonymousType_1>
+|}
+type anonymousType_1 = { _?: java_lang_Object {"class": "java.lang.Object",
+  "typeAlias": "Object",
+  "typeId": "java.lang.Object"} }
+type java_lang_Object = {|  |} {"class": "java.lang.Object",
+"typeAlias": "Object",
+"typeId": "java.lang.Object"}
+
+
+
+
+

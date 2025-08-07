@@ -1,0 +1,11 @@
+%dw 2.0
+
+type auto_092bd368_cfef_4614_b411_5fc53b94c856_Input_Payload = Array<{ _?: java_lang_Object {"class": "java.lang.Object",
+  "typeAlias": "Object",
+  "typeId": "java.lang.Object"} }>
+type java_lang_Object = {|  |} {"class": "java.lang.Object",
+"typeAlias": "Object",
+"typeId": "java.lang.Object"}
+
+
+

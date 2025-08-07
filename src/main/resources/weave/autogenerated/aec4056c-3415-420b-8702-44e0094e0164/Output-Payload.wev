@@ -1,0 +1,19 @@
+%dw 2.0
+
+type auto_aec4056c_3415_420b_8702_44e0094e0164_Output_Payload = {|
+  CCAH: Array<{ _?: java_lang_Object {"class": "java.lang.Object",
+    "typeAlias": "Object",
+    "typeId": "java.lang.Object"} }>, 
+  HPSJ: Array<anonymousType_1>
+|}
+type anonymousType_1 = { _?: java_lang_Object {"class": "java.lang.Object",
+  "typeAlias": "Object",
+  "typeId": "java.lang.Object"} }
+type java_lang_Object = {|  |} {"class": "java.lang.Object",
+"typeAlias": "Object",
+"typeId": "java.lang.Object"}
+
+
+
+
+
